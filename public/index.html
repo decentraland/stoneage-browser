@@ -22,6 +22,31 @@
 
     <div id="content">
     </div>
+
+    <!-- Bootstrap -->
+    <script src="./vendor/jquery.min.js"></script>
+    <script src="./vendor/bootstrap.min.js"></script>
+
+    <!-- React -->
+    <script src="./vendor/react.js"></script>
+    <script src="./vendor/JSXTransformer.js"></script>
+    <script src="./vendor/react-bootstrap.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="./js/config.js"></script>
+    <script src="./js/websocket.js"></script>
+    <script src="./js/blocksui.js"></script>
+    <script src="./js/index.js" type="text/jsx"></script>
+
+  </body>
+</html>
+
+
+<script type="text/javascript">
+  $(function () {
+    $('[data-toggle="popover"]').popover();
+  })
+  /*
     <div id="sidebar">
       <h2>Status</h2>
       <ul>
@@ -56,31 +81,6 @@
         <li>Genesis (height 0)</li>
       </ul>
     </div>
-
-    <!-- Bootstrap -->
-    <script src="./vendor/jquery.min.js"></script>
-    <script src="./vendor/bootstrap.min.js"></script>
-
-    <!-- React -->
-    <script src="./vendor/react.js"></script>
-    <script src="./vendor/JSXTransformer.js"></script>
-    <script src="./vendor/react-bootstrap.min.js"></script>
-
-    <!-- Scripts -->
-    <script src="./js/config.js"></script>
-    <script src="./js/websocket.js"></script>
-    <script src="./js/blocksui.js"></script>
-    <script src="./js/index.js" type="text/jsx"></script>
-
-  </body>
-</html>
-
-
-<script type="text/javascript">
-  $(function () {
-    $('[data-toggle="popover"]').popover();
-  })
-  /*
 $(function() {
 
   var width = $(window).width();

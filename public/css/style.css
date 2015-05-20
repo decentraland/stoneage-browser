@@ -17,7 +17,7 @@
   background-color: white; 
   border: 1px solid black;
 }
-.block {
+.pixel {
   display: block;
   position: absolute;
   width: 10px;
@@ -25,13 +25,4 @@
 }
 .unmined {
   background-color: #666;
-}
-.green-block {
-  background-color: green;
-}
-.blue-block {
-  background-color: blue;
-}
-.genesis {
-  background-color: red;
 }
