@@ -1,0 +1,22 @@
+{
+  "name": "decentraland",
+  "version": "0.0.1-alpha1-SNAPSHOT",
+  "description": "A Decentralized Virtual Reality",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "authors": [
+    "Esteban Ordano <eordano@gmail.com>",
+    "Manuel Araoz <manuelaraoz@gmail.com>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "^3.3.4",
+    "express-jsxtransform": "^3.0.0",
+    "jquery": "^2.1.4",
+    "react": "^0.13.3",
+    "react-bootstrap": "^0.22.6",
+    "react-tools": "^0.13.3"
+  }
+}
