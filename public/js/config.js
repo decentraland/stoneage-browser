@@ -1,6 +1,4 @@
-var Decentraland = window.Decentraland = window.Decentraland || {};
-
-Decentraland.config = {
+module.exports = {
   server: 'localhost:3000',
   tileWidth: 10,
   tileHeight: 10,

@@ -12,6 +12,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "blockchain.js": "git://github.com/maraoz/blockchain.js.git",
     "bootstrap": "^3.3.4",
     "express-jsxtransform": "^3.0.0",
     "jquery": "^2.1.4",
