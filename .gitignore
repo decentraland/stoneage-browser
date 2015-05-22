@@ -1,3 +1,4 @@
 node_modules
 public/vendor
+public/js/bundle.js
 *.sw[a-z]

@@ -18,5 +18,9 @@
     "react": "^0.13.3",
     "react-bootstrap": "^0.22.6",
     "react-tools": "^0.13.3"
+  },
+  "devDependencies": {
+    "browserify": "^10.2.1",
+    "reactify": "^1.1.1"
   }
 }

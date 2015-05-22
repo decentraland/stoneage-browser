@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Decentrapixeland</title>
+    <title>Decentraland Experiment 1: Decentrapixel</title>
 
     <!-- Bootstrap -->
     <link href="./vendor/bootstrap.min.css" rel="stylesheet">
@@ -23,106 +23,16 @@
     <div id="content">
     </div>
 
-    <!-- Bootstrap -->
+    <!-- Scripts -->
     <script src="./vendor/jquery.min.js"></script>
     <script src="./vendor/bootstrap.min.js"></script>
-
-    <!-- React -->
-    <script src="./vendor/react.js"></script>
-    <script src="./vendor/JSXTransformer.js"></script>
-    <script src="./vendor/react-bootstrap.min.js"></script>
-
-    <!-- Scripts -->
-    <script src="./js/config.js"></script>
-    <script src="./js/websocket.js"></script>
-    <script src="./js/blocksui.js"></script>
-    <script src="./js/index.js" type="text/jsx"></script>
+    <script src="./js/bundle.js"></script>
+    <script type="text/javascript">
+      $(function () {
+        $('[data-toggle="popover"]').popover();
+      })
+    </script>
 
   </body>
 </html>
 
-
-<script type="text/javascript">
-  $(function () {
-    $('[data-toggle="popover"]').popover();
-  })
-  /*
-    <div id="sidebar">
-      <h2>Status</h2>
-      <ul>
-        <li>Mining: 0,3</li>
-        <li>Difficulty: 4</li>
-        <li>My Public Key: 030000...0000</li>
-        <li>Setting Color: <input type="color" name="targetColor" value="#00FF00"/>
-      </ul>
-      <h3>Controlled Parcels</h3>
-      <ul>
-        <li><strong>(1, 0)</strong> <input type="color" name="color"/> <button type="button" class="btn btn-primary btn-sm">Change</button>
-        </li>
-      </ul>
-      <h3>Pending Transactions</h3>
-        <ul>
-          <li>(1,0) ABC...FDE {color: #FF0000}</li>
-        </ul>
-      <h3>Latest Blocks</h3>
-      <ul>
-        <li>...3AF46C (height 4)
-          <h5>Transactions</h5>
-          <ul>
-            <li>(0,2) F00...123 {color: #0000FF}</li>
-            <li>(0,1) 810...9DA {color: #0000FF}</li>
-          </ul>
-          <br/>
-          </li>
-        </li>
-        <li>...AB2123 (height 3)</li>
-        <li>...8109DA (height 2)</li>
-        <li>...183BA2 (height 1)</li>
-        <li>Genesis (height 0)</li>
-      </ul>
-    </div>
-$(function() {
-
-  var width = $(window).width();
-  var height = $(window).height();
-  var canvas = $('#canvas');
-
-  var x = 0;
-  var y = 0;
-
-  var addTile = function(x, y) {
-    var xPos = x * tileWidth + (x-1) * tileSeparation;
-    var yPos = y * tileHeight + (y-1) * tileSeparation;
-    var element = $('<div id="block_' + x + '_' + y + '" class="block unmined" style="top: ' + yPos + '; left: ' + xPos + '"></div>');
-    element.click(function(ev) {
-      showInfo(x, y, $.noop);
-    });
-    canvas.append(element);
-  };
-
-  var getTileData = function(x, y, callback) {
-    return callback(null, {
-      position: '(' + x + ', ' + y + ')',
-      wasMined: false,
-      isMyMiningTarget: false,
-
-      lastTx: '0000000000000000000000000000000000000000000000000000000000000000',
-      properties: {
-        color: '#666666'
-      },
-      publicKey: '030000000000000000000000000000000000000000000000000000000000000000'
-    });
-  };
-
-  var showInfo = function(x, y, callback) {
-    getTileData(x, y, function(err, data) {
-      var xPos = (x + 0.5) * tileWidth  + (x-1) * tileSeparation;
-      var yPos = (y + 0.5) * tileHeight + (y-1) * tileSeparation;
-      $('#showInfo').remove();
-      var info = $('<div id="showInfo" style="top: ' + yPos + '; left: ' + xPos + '; position: absolute; z-index: 1;"></div>');
-      canvas.append(info);
-    });
-  };
-});
-*/
-</script>
