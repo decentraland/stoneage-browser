@@ -1,12 +1,16 @@
 'use strict';
 
-var blockchainjs = require('blockchainjs');
+var events = require('events');
+var util = require('util');
+
+var blockchainjs = require('blockchain.js');
 var $ = blockchainjs.util.preconditions;
 var _ = blockchainjs.deps._;
 
 var NULL = '0000000000000000000000000000000000000000000000000000000000000000';
 
-function BlockChain() {
+function Blockchain() {
+  events.EventEmitter.call(this);
   this.tip = NULL;
   this.work = {};
   this.work[NULL] = 0;
@@ -18,11 +22,12 @@ function BlockChain() {
   this.next = {};
   this.prev = {};
 }
+util.inherits(Blockchain, events.EventEmitter);
 
-BlockChain.NULL = NULL;
+Blockchain.NULL = NULL;
 
-BlockChain.fromObject = function(obj) {
-  var blockchain = new BlockChain();
+Blockchain.fromObject = function(obj) {
+  var blockchain = new Blockchain();
   blockchain.tip = obj.tip;
   blockchain.work = obj.work;
   blockchain.hashByHeight = obj.hashByHeight;
@@ -37,7 +42,7 @@ var getWork = function(hash) {
   return 1;
 };
 
-BlockChain.prototype.addData = function(block) {
+Blockchain.prototype.addData = function(block) {
   // TODO: $.checkArgument(isValidBlock(block));
 
   var prevHash = block.prevHash;
@@ -47,7 +52,7 @@ BlockChain.prototype.addData = function(block) {
   this.prev[hash] = prevHash;
 };
 
-BlockChain.prototype._appendNewBlock = function(hash) {
+Blockchain.prototype._appendNewBlock = function(hash) {
   var toUnconfirm = [];
   var toConfirm = [];
   var self = this;
@@ -78,7 +83,7 @@ BlockChain.prototype._appendNewBlock = function(hash) {
   };
 };
 
-BlockChain.prototype.proposeNewBlock = function(block) {
+Blockchain.prototype.proposeNewBlock = function(block) {
   var prevHash = block.prevHash;
   var hash = block.hash;
 
@@ -99,7 +104,7 @@ BlockChain.prototype.proposeNewBlock = function(block) {
   };
 };
 
-BlockChain.prototype.confirm = function(hash) {
+Blockchain.prototype.confirm = function(hash) {
   var prevHash = this.prev[hash];
   $.checkState(prevHash === this.tip, 'Attempting to confirm a non-contiguous block.');
 
@@ -110,7 +115,7 @@ BlockChain.prototype.confirm = function(hash) {
   this.height[hash] = height;
 };
 
-BlockChain.prototype.unconfirm = function(hash) {
+Blockchain.prototype.unconfirm = function(hash) {
   var prevHash = this.prev[hash];
   $.checkState(hash === this.tip, 'Attempting to unconfirm a non-tip block');
 
@@ -121,11 +126,11 @@ BlockChain.prototype.unconfirm = function(hash) {
   delete this.height[hash];
 };
 
-BlockChain.prototype.hasData = function(hash) {
+Blockchain.prototype.hasData = function(hash) {
   return !_.isUndefined(this.work[hash]);
 };
 
-BlockChain.prototype.prune = function() {
+Blockchain.prototype.prune = function() {
   var self = this;
   _.each(this.prev, function(key) {
     if (!self.height[key]) {
@@ -135,7 +140,7 @@ BlockChain.prototype.prune = function() {
   });
 };
 
-BlockChain.prototype.toObject = function() {
+Blockchain.prototype.toObject = function() {
   return {
     tip: this.tip,
     work: this.work,
@@ -146,11 +151,11 @@ BlockChain.prototype.toObject = function() {
   };
 };
 
-BlockChain.prototype.toJSON = function() {
+Blockchain.prototype.toJSON = function() {
   return JSON.stringify(this.toObject());
 };
 
-BlockChain.prototype.getBlockLocator = function() {
+Blockchain.prototype.getBlockLocator = function() {
   $.checkState(this.tip);
   $.checkState(!_.isUndefined(this.height[this.tip]));
 
@@ -170,8 +175,8 @@ BlockChain.prototype.getBlockLocator = function() {
   return result;
 };
 
-BlockChain.prototype.getCurrentHeight = function() {
+Blockchain.prototype.getCurrentHeight = function() {
   return this.height[this.tip];
 };
 
-module.exports = BlockChain;
+module.exports = Blockchain;
