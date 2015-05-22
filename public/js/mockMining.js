@@ -20,7 +20,7 @@ function MockMining(client) {
   };
   this.client = client;
 
-  setInterval(this.fakeBlock.bind(this), 50);
+  setInterval(this.fakeBlock.bind(this), 100);
 }
 inherits(MockMining, events.EventEmitter);
 

@@ -7,7 +7,7 @@ var LatestBlock = require('./latestBlock');
 var LatestBlocks = React.createClass({
   render: function() {
     var blocks = this.props.blocks.map(function(block) {
-      var key = 'latest_' + block.id;
+      var key = 'latest_' + block.hash;
       return <LatestBlock key={key} block={block} />
     });
     return (

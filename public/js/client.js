@@ -19,14 +19,19 @@ function Client() {
 
   this.blockchain = new Blockchain();
 
+  this.wallet = {};
+  var privateKey = new blockchainjs.PrivateKey();
+  this.wallet[privateKey.publicKey.toString()] = privateKey;
+
   this.blocks = {};
   this.pixels = {};
 
-  // TODO: These have no function right now
-    this.txPool = [];
-    this.lastBlocks = [];
+  this.txPool = [];
 
+  // TODO: Don't use the mock
   this.miner = new MockMining(this);
+  this.miner.owner = privateKey.publicKey.toString();
+
   this.miner.on('new', this.receiveBlock.bind(this));
   this.receiveBlock(GenesisBlock);
 }
@@ -52,12 +57,14 @@ Client.prototype.receiveBlock = function(block) {
 };
 
 Client.prototype.getState = function() {
+  var self = this;
   return {
     pixels: _.values(this.pixels),
     mining: this.miner.properties,
-    // TODO: Wallet, TX pool, history of blocks?
-    controlled: [],
-    txPool: [],
+    controlled: _.filter(_.values(this.pixels),
+                         function(block) { return !!(self.wallet[block.lastTx.owner]); })
+      .map(function(block) { return block.lastTx; }),
+    txPool: this.txPool,
     latestBlocks: _.values(this.blocks)
   };
 };
