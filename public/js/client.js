@@ -7,6 +7,8 @@ var events = require('events');
 var MockMining = require('./mockMining');
 var Blockchain = require('./blockchain');
 var Pos = require('./components/position');
+var blockchainjs = require('blockchain.js');
+var _ = blockchainjs.deps._;
 
 var GenesisBlock = require('./data/genesis');
 
@@ -51,12 +53,12 @@ Client.prototype.receiveBlock = function(block) {
 
 Client.prototype.getState = function() {
   return {
-    pixels: this.pixels,
+    pixels: _.values(this.pixels),
     mining: this.miner.properties,
     // TODO: Wallet, TX pool, history of blocks?
     controlled: [],
     txPool: [],
-    latestBlocks: []
+    latestBlocks: _.values(this.blocks)
   };
 };
 

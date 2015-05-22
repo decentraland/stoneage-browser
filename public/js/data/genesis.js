@@ -7,7 +7,7 @@ module.exports = {
     version: 1,
     input: '',
     position: { x: 0, y: 0 },
-    color: 0xFF0000FF,
+    color: 'FF0000',
     owner: '020000000000000000000000000000000000000000000000000000000000000000'
   }]
 };

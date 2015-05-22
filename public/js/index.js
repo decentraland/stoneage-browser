@@ -7,4 +7,6 @@ var Client = require('./client');
 
 var client = new Client();
 
-React.render(PageConstructor(client), document.getElementById('content'));
+var page = PageConstructor(client);
+
+React.render(page, document.getElementById('content'));

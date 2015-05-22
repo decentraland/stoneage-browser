@@ -6,6 +6,10 @@ function PageConstructor(client) {
 
   var Page = React.createClass({
     getInitialState: function() {
+      var self = this;
+      client.on('update', function() {
+        self.setState(client.getState());
+      })
       return client.getState();
     },
     render: function() {
