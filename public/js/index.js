@@ -96,18 +96,23 @@ var Canvas = React.createClass({
     var unmined = [];
     var pixels = [];
     this.props.pixels.forEach(function(pixel) {
+      var posStr = posToString(pixel.pos);
+      used[posStr] = true;
+      posStr = 'pixel_' + posStr;
       pixels.push(
-        <Pixel pixel={pixel} />
+        <Pixel key={posStr} pixel={pixel} />
       );
-      used[posToString(pixel.pos)] = true;
       neighbors(pixel.pos).forEach(function(neighbor) {
         unmined.push(neighbor);
       });
     });
     unmined.forEach(function(pos) {
-      if (!used[posToString(pos)]) {
+      var posStr = posToString(pos);
+      if (!used[posStr]) {
+        used[posStr] = true;
+        posStr = 'unmined_' + posStr;
         pixels.push(
-          <Unmined pos={pos} />
+          <Unmined key={posStr} pos={pos} />
         );
       }
     });
@@ -150,7 +155,8 @@ var Controlled = React.createClass({
   render: function() {
     var parcels = [];
     this.props.controlled.forEach(function(pixel) {
-      parcels.push(<ControlledParcel pixel={pixel} />);
+      var key = 'controlled_land_' + posToString(pixel.pos);
+      parcels.push(<ControlledParcel key={key} pixel={pixel} />);
     });
     return (
       <div>
@@ -176,7 +182,8 @@ var PendingTransaction = React.createClass({
 var PendingTransactions = React.createClass({
   render: function() {
     var transactions = this.props.txPool.map(function(tx) {
-      return <PendingTransaction tx={tx} />;
+      var key = 'pending_' + tx.id;
+      return <PendingTransaction key={key} tx={tx} />;
     });
     return (
       <div>
@@ -200,7 +207,8 @@ var LatestBlock = React.createClass({
 var LatestBlocks = React.createClass({
   render: function() {
     var blocks = this.props.blocks.map(function(block) {
-      return <LatestBlock block={block} />
+      var key = 'latest_' + block.id;
+      return <LatestBlock key={key} block={block} />
     });
     return (
       <div>

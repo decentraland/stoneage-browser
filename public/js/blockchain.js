@@ -1,8 +1,8 @@
 'use strict';
 
-var bitcore = require('bitcore');
-var $ = window.preconditions;
-var _ = window._;
+var blockchainjs = require('blockchainjs');
+var $ = blockchainjs.util.preconditions;
+var _ = blockchainjs.deps._;
 
 var NULL = '0000000000000000000000000000000000000000000000000000000000000000';
 
@@ -32,21 +32,9 @@ BlockChain.fromObject = function(obj) {
   return blockchain;
 };
 
-var BITS_OF_WORK = {
-  1: 3,
-  2: 2, 3: 2,
-  4: 1, 5: 1, 6: 1, 7: 1,
-  8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0
-}
 var getWork = function(hash) {
-  var i = 0;
-  var result = 0;
-  while (hash.substr(i, i+1) === '0') {
-    result += 4;
-    i += 1;
-  }
-  resutl += BITS_OF_WORK[-(-hash.substr(i, i+1))];
-  return result;
+  // TODO: Calculate work
+  return 1;
 };
 
 BlockChain.prototype.addData = function(block) {
@@ -95,11 +83,13 @@ BlockChain.prototype.proposeNewBlock = function(block) {
   var hash = block.hash;
 
   $.checkState(this.hasData(prevHash), 'No previous data to estimate work');
-  this.addData(header);
+  this.addData(block);
+
   var work = this.work[hash];
   var tipWork = this.work[this.tip];
   $.checkState(!_.isUndefined(work), 'No work found for ' + hash);
   $.checkState(!_.isUndefined(tipWork), 'No work found for tip ' + this.tip);
+
   if (work > tipWork) {
     return this._appendNewBlock(hash);
   }
