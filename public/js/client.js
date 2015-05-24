@@ -22,6 +22,7 @@ function Client() {
   this.wallet = {};
   var privateKey = new blockchainjs.PrivateKey();
   this.wallet[privateKey.publicKey.toString()] = privateKey;
+  this.keys = [privateKey.publicKey.toString()];
 
   this.blocks = {};
   this.pixels = {};
@@ -39,7 +40,10 @@ util.inherits(Client, events.EventEmitter);
 
 Client.prototype.receiveBlock = function(block) {
   var self = this;
-  // TODO: validate block has valid transactions and proof of work
+  if (this.blockchain.isInvalidBlock(block)) {
+    // TODO: Close connection with whomever sent this
+    return;
+  }
   var result = this.blockchain.proposeNewBlock(block);
   this.blocks[block.hash] = block;
 
@@ -63,7 +67,6 @@ Client.prototype.getState = function() {
     mining: this.miner.properties,
     controlled: _.filter(_.values(this.pixels),
                          function(block) { return !!(self.wallet[block.lastTx.owner]); })
-      .map(function(block) { return block.lastTx; }),
     txPool: this.txPool,
     latestBlocks: _.values(this.blocks)
   };

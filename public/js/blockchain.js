@@ -52,6 +52,10 @@ Blockchain.prototype.addData = function(block) {
   this.prev[hash] = prevHash;
 };
 
+Blockchain.prototype.isInvalidBlock = function(block) {
+  var coinbase = block.transactions[0];
+};
+
 Blockchain.prototype._appendNewBlock = function(hash) {
   var toUnconfirm = [];
   var toConfirm = [];
@@ -94,6 +98,7 @@ Blockchain.prototype.proposeNewBlock = function(block) {
   var tipWork = this.work[this.tip];
   $.checkState(!_.isUndefined(work), 'No work found for ' + hash);
   $.checkState(!_.isUndefined(tipWork), 'No work found for tip ' + this.tip);
+  // TODO: Validate block; recalculate difficulty
 
   if (work > tipWork) {
     return this._appendNewBlock(hash);

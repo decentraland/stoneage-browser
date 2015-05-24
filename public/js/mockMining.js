@@ -15,7 +15,7 @@ function MockMining(client) {
   this.properties = {
     targetPos: { x: 1, y: 0 },
     difficulty: 4,
-    publicKey: '03000...000',
+    publicKey: client.keys[0],
     color: randomcolor().substr(1, 7)
   };
   this.client = client;
