@@ -3,9 +3,7 @@
 var React = require('react');
 var PageConstructor = require('./components/page');
 
-var Client = require('./client');
-
-var client = new Client();
+var client = require('./client');
 
 var page = PageConstructor(client);
 

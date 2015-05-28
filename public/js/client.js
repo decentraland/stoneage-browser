@@ -26,8 +26,10 @@ function Client() {
 
   this.blocks = {};
   this.pixels = {};
+  this.pixelValues = [];
 
   this.txPool = [];
+  this.focusTx = null;
 
   // TODO: Don't use the mock
   this.miner = new MockMining(this);
@@ -50,11 +52,15 @@ Client.prototype.receiveBlock = function(block) {
   result.confirmed.forEach(function(hash) {
     var block = self.blocks[hash]
     var coinbase = block.transactions[0];
-    self.pixels[Pos.posToString(coinbase.position)] = {
+    self.pixelValues.push(self.pixels[Pos.posToString(coinbase.position)] = {
       pos: coinbase.position,
       lastTx: coinbase
-    };
-    // TODO: other transactions
+    });
+    for (var i = 1; i < block.transactions.length; i++) {
+      var transaction = block.transactions[i];
+      self.pixels[Pos.posToString(transaction.position)].lastTx = transaction;
+      self.pixels[Pos.posToString(transaction.position)].pos = transaction.pos;
+    }
   });
   // TODO: this.blockchain.onUnconfirmBlock
   this.emit('update');
@@ -63,13 +69,15 @@ Client.prototype.receiveBlock = function(block) {
 Client.prototype.getState = function() {
   var self = this;
   return {
-    pixels: _.values(this.pixels),
+    pixels: this.pixelValues,
     mining: this.miner.properties,
-    controlled: _.filter(_.values(this.pixels),
-                         function(block) { return !!(self.wallet[block.lastTx.owner]); })
+    controlled: this.pixelValues.filter(
+      function(block) { return !!(self.wallet[block.lastTx.owner]); }
+    ),
     txPool: this.txPool,
-    latestBlocks: _.values(this.blocks)
+    latestBlocks: _.values(this.blocks),
+    focusTx: this.focusTx
   };
 };
 
-module.exports = Client;
+module.exports = new Client();

@@ -15,22 +15,14 @@ var Unmined = React.createClass({
     var posHuman = Pos.posToHumanString(this.props.pos);
     var id = 'pixel_' + posStr;
     return (
-      <OverlayTrigger trigger='focus' placement='top' overlay={
-        <Popover html="true"><h3>({posHuman})</h3>
-          <ul>
-          <li>Not mined</li>
-          <li><a className='btn btn-primary btn-sm'>Set as target</a></li>
-          </ul>
-        </Popover>}>
-        <a
-          id={id}
-          className="pixel unmined"
-          style={{left: left + 'px', top: top + 'px'}}
-          // onClick={this.props.setTarget(pixel.pos)}
-          tabIndex="0"
-          role="button"
-        ></a>
-      </OverlayTrigger>
+      <a
+        id={id}
+        className="pixel unmined"
+        style={{left: left + 'px', top: top + 'px'}}
+        // onClick={this.props.setTarget(pixel.pos)}
+        tabIndex="0"
+        role="button"
+      ></a>
     );
   }
 });

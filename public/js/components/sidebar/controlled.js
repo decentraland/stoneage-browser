@@ -10,7 +10,10 @@ var Controlled = React.createClass({
     var parcels = [];
     this.props.controlled.forEach(function(pixel) {
       var key = 'controlled_land_' + Pos.posToString(pixel.pos);
-      parcels.push(<ControlledParcel key={key} pixel={pixel} />);
+      parcels.push(<ControlledParcel
+                     key={key}
+                     pixel={pixel}
+                   />);
     });
     return (
       <div>

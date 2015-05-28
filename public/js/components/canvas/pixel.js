@@ -17,6 +17,16 @@ var Pixel = React.createClass({
     var id = "pixel_" + posStr;
     var color = '#' + pixel.lastTx.color;
     return (
+      <a
+        id={id}
+        className="pixel"
+        style={{left: left + 'px', top: top + 'px', backgroundColor: color}}
+        tabIndex="0"
+        role="button"
+      ></a>
+    );
+    /*
+    return (
       <OverlayTrigger trigger='focus' placement='top' overlay={
         <Popover html="true">
           <h3>({posHuman})</h3>
@@ -35,6 +45,7 @@ var Pixel = React.createClass({
         ></a>
       </OverlayTrigger>
     );
+    */
   }
 });
 
