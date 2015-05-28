@@ -1,8 +1,8 @@
+'use strict';
+
 var core = require('decentraland-core');
 var $ = core.util.preconditions;
 var _ = core.deps._;
-var bufferUtils = core.util.buffer;
-var Hash = core.crypto.Hash;
 var Transaction = core.Transaction;
 var Miner = core.Miner;
 var Pos = require('./components/position');
@@ -36,8 +36,9 @@ Mining.prototype.startMining = function() {
 
   opts.previous = this.blockchain.getTipBlock();
   opts.time = Math.round(new Date() / 1000);
+  opts.bits = 0x1f0fffff;
 
-  var miner = this.miner = new Miner(opts)
+  var miner = this.miner = new Miner(opts);
   this.txPool.map(function(tx) { return miner.addTransaction(tx); });
 
   var newTarget = function(block) {
