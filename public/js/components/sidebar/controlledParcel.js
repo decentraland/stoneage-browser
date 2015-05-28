@@ -9,8 +9,8 @@ var ControlledParcel = React.createClass({
   craftTx: function() {
   },
   render: function() {
-    var pos = Pos.posToHumanString(this.props.pixel.pos);
-    var color = '#' + this.props.pixel.color;
+    var pos = Pos.posToHumanString(this.props.pixel.position);
+    var color = '#' + this.props.pixel.color.toString(16).substr(0, 6);
     return (
       <li><strong>{pos}</strong>:
         <input

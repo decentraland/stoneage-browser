@@ -9,12 +9,12 @@ var LatestBlocks = require('./latestBlocks');
 
 var Sidebar = React.createClass({
   render: function() {
+    // <LatestBlocks blocks={this.props.client.latestBlocks} />
     return (
       <div id="sidebar">
         <Mining mining={this.props.client.mining} />
         <Controlled controlled={this.props.client.controlled} />
         <PendingTransactions txPool={this.props.client.txPool} />
-        <LatestBlocks blocks={this.props.client.latestBlocks} />
       </div>
     );
   }

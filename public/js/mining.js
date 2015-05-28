@@ -3,84 +3,69 @@ var $ = blockchainjs.util.preconditions;
 var _ = blockchainjs.deps._;
 var bufferUtils = blockchainjs.util.buffer;
 var Hash = blockchainjs.crypto.Hash;
+var Transaction = blockchainjs.Transaction;
+var Miner = blockchainjs.Miner;
+var Pos = require('./components/position');
 
 function Mining (opts) {
   $.checkArgument(_.isObject(opts));
 
+  this.blockchain = opts.blockchain;
   this.nonce = opts.nonce || 0;
-  this.template = null;
-  this.txTemplate = null;
-
-  // this.targetPos = opts.targetPos;
-  this.version = 1;
-  this.difficulty = opts.difficulty;
   this.publicKey = opts.publicKey;
+  this.target = opts.target;
   this.color = opts.color;
-  this.prevHash = opts.prevHash;
-  this.height = opts.height;
   this.txPool = opts.txPool;
-  this.timestamp = null;
-
-  this.setStop = null;
+  this.callback = opts.callback;
 }
 
-Mining.prototype.startMining = function(callback) {
+Mining.prototype.startMining = function() {
 
-  if (this.miningTimeoutId) {
-    this.stopMining();
+  var self = this;
+  var opts = {};
+
+  if (this.target === null) {
+    console.log('No target');
+    throw new Error('No target');
   }
-  this.timestamp = Math.round(new Date().getTime() / 1000);
 
-  this.template = Buffer.concat([
-    bufferUtils.integerAsBuffer(this.version),
-    bufferUtils.integerAsBuffer(this.difficulty),
-    bufferUtils.integerAsBuffer(this.height),
-    new Buffer(this.prevHash, 'hex'),
-    bufferUtils.integerAsBuffer(this.timestamp),
-    // nonce,
-    // transactions
-  ]);
-  this.txTemplate = Buffer.concat(
-    this.txPool.map(function(tx) { return tx.toBuffer(); })
-  );
-  this.nonce = 0;
-  this.callback = callback;
-  this.tryMining();
-};
+  opts.coinbase = new Transaction()
+    .at(this.target.x, this.target.y)
+    .to(this.publicKey)
+    .colored(this.color);
 
-var getWork = function(hash) {
-  var i = 0;
-  while (hash[i] === 0) i++;
-  return i;
-};
+  opts.previous = this.blockchain.getTipBlock();
+  opts.time = Math.round(new Date() / 1000);
 
-Mining.prototype.tryMining = function() {
-  if (this.setStop) {
-    this.setStop = null;
-    return;
-  }
-  var block = Buffer.concat([
-    this.template,
-    bufferUtils.integerAsBuffer(this.nonce++),
-    bufferUtils.integerAsBuffer(this.txTemplate.length),
-    this.txTemplate
-  ]);
-  var hash = Hash.sha256sha256(block);
-  var work = getWork(hash);
+  var miner = this.miner = new Miner(opts)
+  this.txPool.map(function(tx) { return miner.addTransaction(tx); });
 
-  if (work > this.difficulty) {
-    if (this.callback) {
-      this.callback(block, hash, work);
+  var newTarget = function(block) {
+    self.target = null;
+    var base = block.transactions[0].position;
+    _.shuffle(Pos.neighbors(base)).map(function(pos) {
+      if (!self.blockchain.pixels[Pos.posToString(pos)]) {
+        self.target = pos;
+      }
+    });
+  };
+
+  miner.on('block', function(block) {
+    newTarget(block);
+    if (self.target !== null) {
+      miner.newTip(block, new Transaction()
+        .at(self.target.x, self.target.y)
+        .to(self.publicKey)
+        .colored(self.color)
+      );
     }
-  } else {
-    process.nextTick(this.tryMining.bind(this));
-  }
+    self.callback(block);
+  });
+  miner.run();
 };
 
-Mining.prototype.stopMining = function() {
-  if (this.setStop !== null) {
-    this.setStop = true;
-  }
+Mining.prototype.addTransaction = function(transaction) {
+  this.miner.addTransaction(transaction);
 };
 
 module.exports = Mining;

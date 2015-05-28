@@ -12,13 +12,13 @@ var Canvas = React.createClass({
     var unmined = [];
     var pixels = [];
     this.props.pixels.forEach(function(pixel) {
-      var posStr = Pos.posToString(pixel.pos);
+      var posStr = Pos.posToString(pixel.position);
       used[posStr] = true;
       posStr = 'pixel_' + posStr;
       pixels.push(
         <Pixel key={posStr} pixel={pixel} />
       );
-      Pos.neighbors(pixel.pos).forEach(function(neighbor) {
+      Pos.neighbors(pixel.position).forEach(function(neighbor) {
         unmined.push(neighbor);
       });
     });

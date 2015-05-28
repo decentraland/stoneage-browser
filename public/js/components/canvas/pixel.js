@@ -10,12 +10,12 @@ var Pos = require('../position');
 var Pixel = React.createClass({
   render: function() {
     var pixel = this.props.pixel;
-    var posStr = Pos.posToString(pixel.pos);
-    var posHuman = Pos.posToHumanString(pixel.pos);
-    var left = Pos.tilePositionLeft(pixel.pos.x);
-    var top = Pos.tilePositionTop(pixel.pos.y);
+    var posStr = Pos.posToString(pixel.position);
+    var posHuman = Pos.posToHumanString(pixel.position);
+    var left = Pos.tilePositionLeft(pixel.position.x);
+    var top = Pos.tilePositionTop(pixel.position.y);
     var id = "pixel_" + posStr;
-    var color = '#' + pixel.lastTx.color;
+    var color = '#' + pixel.color.toString(16).substr(0, 6);
     return (
       <a
         id={id}
