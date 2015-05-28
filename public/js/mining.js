@@ -1,10 +1,10 @@
-var blockchainjs = require('blockchain.js');
-var $ = blockchainjs.util.preconditions;
-var _ = blockchainjs.deps._;
-var bufferUtils = blockchainjs.util.buffer;
-var Hash = blockchainjs.crypto.Hash;
-var Transaction = blockchainjs.Transaction;
-var Miner = blockchainjs.Miner;
+var core = require('decentraland-core');
+var $ = core.util.preconditions;
+var _ = core.deps._;
+var bufferUtils = core.util.buffer;
+var Hash = core.crypto.Hash;
+var Transaction = core.Transaction;
+var Miner = core.Miner;
 var Pos = require('./components/position');
 
 function Mining (opts) {

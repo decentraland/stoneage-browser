@@ -4,11 +4,11 @@ var util = require('util');
 var events = require('events');
 
 var Pos = require('./components/position');
-var blockchainjs = require('blockchain.js');
-var Block = blockchainjs.Block;
-var Blockchain = blockchainjs.Blockchain;
+var core = require('decentraland-core');
+var Block = core.Block;
+var Blockchain = core.Blockchain;
 var Miner = require('./mining');
-var _ = blockchainjs.deps._;
+var _ = core.deps._;
 
 var randomcolor = require('randomcolor');
 
@@ -21,7 +21,7 @@ function Client() {
   this.blockchain.proposeNewBlock(Block.genesis);
 
   this.wallet = {};
-  var privateKey = new blockchainjs.PrivateKey();
+  var privateKey = new core.PrivateKey();
   this.wallet[privateKey.publicKey.toString()] = privateKey;
   this.keys = [privateKey.publicKey];
 
