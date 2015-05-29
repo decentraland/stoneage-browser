@@ -87,8 +87,8 @@ Client.prototype.receiveBlock = function(block) {
     config.networking.metadata = {
       height: block.height,
     };
-    this.emit('update');
     this.retarget();
+    this.emit('update');
     this.miner.startMining();
   }
 };

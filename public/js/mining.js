@@ -21,6 +21,7 @@ function Mining (opts) {
   this.worker = new Worker('./js/webworker.js');
 
   this.worker.onmessage = function(event) {
+    this.mining = false;
     self.emit('block', Block.fromString(event.data));
   };
   this.worker.onerror = function() {
@@ -33,11 +34,16 @@ function Mining (opts) {
   this.target = opts.target;
   this.color = opts.color;
 
+  this.enableMining = true;
   this.mining = false;
 }
 inherits(Mining, events.EventEmitter);
 
 Mining.prototype.startMining = function() {
+
+  if (!this.enableMining) {
+    return;
+  }
 
   var self = this;
   var opts = {};
@@ -55,22 +61,43 @@ Mining.prototype.startMining = function() {
   });
 };
 
+Mining.prototype.switchMining = function() {
+  if (this.enableMining) {
+    this.enableMining = false;
+    this.pause();
+  } else {
+    this.enableMining = true;
+    this.startMining();
+  }
+};
+
+Mining.prototype.pauseAndDo = function(what) {
+  var wasMining = this.mining;
+  if (this.mining) {
+    this.pause();
+  }
+  what.call(this);
+  if (wasMining) {
+    this.resume();
+  }
+};
+
 Mining.prototype.setNewTarget = function(target) {
-  this.pause();
-  this.target = target;
-  this.startMining();
+  pauseAndDo(function() {
+    this.target = target;
+  });
 };
 
 Mining.prototype.setNewColor = function(color) {
-  this.pause();
-  this.color = color;
-  this.startMining();
+  pauseAndDo(function() {
+    this.color = color;
+  });
 };
 
 Mining.prototype.setNewPublicKey = function(publicKey) {
-  this.pause();
-  this.publicKey = publicKey;
-  this.startMining();
+  pauseAndDo(function() {
+    this.publicKey = publicKey;
+  });
 };
 
 Mining.prototype.addTransaction = function(transaction) {
@@ -78,11 +105,13 @@ Mining.prototype.addTransaction = function(transaction) {
 };
 
 Mining.prototype.pause = function() {
+  this.mining = false;
   this.worker.postMessage({
     type: 'PAUSE'
   });
 };
 Mining.prototype.resume = function() {
+  this.mining = true;
   this.worker.postMessage({
     type: 'RESUME'
   });
