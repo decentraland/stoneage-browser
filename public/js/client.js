@@ -9,6 +9,7 @@ var Blockchain = core.Blockchain;
 var Miner = require('./mining');
 var Networking = require('./networking');
 var config = require('./config.js');
+var Pos = require('./components/position');
 var _ = core.deps._;
 
 var randomcolor = require('randomcolor');
@@ -28,16 +29,17 @@ function Client() {
   this.focusPixel = null;
 
   this.miner = new Miner({
-    blockchain: this.blockchain,
+    client: this,
     publicKey: this.keys[0],
     target: {
       x: 0,
       y: 1
     },
-    color: 0xff000000,
+    color: 0xff0000,
     txPool: this.txPool,
     callback: this.receiveBlock.bind(this)
   });
+  this.miner.on('block', this.receiveBlock.bind(this));
   this.miner.startMining();
 
   config.networking.metadata = {
@@ -69,19 +71,50 @@ Client.prototype._setupNetworking = function() {
 };
 
 Client.prototype.receiveBlock = function(block) {
-  var result = this.blockchain.proposeNewBlock(block);
-  // if (this.blockchain.isInvalidBlock(block)) {
-  // TODO: Close connection with whomever sent this
-  //  return;
-  // }
-  console.log('Mined', block.hash, 'nonce=', block.nonce);
+  var self = this;
+  var result;
+
+  try {
+    result = this.blockchain.proposeNewBlock(block);
+  } catch (e) { 
+    // TODO: Close connection with whomever sent this
+    console.log('Invalid block', e);
+    return;
+  }
+
+  console.log('Mined', block.hash, block.nonce);
   if (result.confirmed.length) {
     config.networking.metadata = {
       height: block.height,
     };
     this.emit('update');
-    this.miner.color = parseInt(randomcolor().substr(1, 7), 16) * 256;
-    setTimeout(this.miner.startMining.bind(this.miner), 100);
+    this.retarget();
+    this.miner.startMining();
+  }
+};
+
+Client.prototype.retarget = function() {
+
+  var lookup = [this.miner.target];
+  var seen = {};
+  seen[Pos.posToString(this.miner.target)] = true;
+  var begin = 0;
+  var end = 1;
+  while (begin < end) {
+    var current = lookup[begin++];
+    var pos = Pos.posToString(current);
+    if (!this.blockchain.pixels[pos]) {
+      this.miner.target = current;
+      return;
+    }
+    var neighbors = _.shuffle(Pos.neighbors(current));
+    neighbors.map(function(neighbor) {
+      var pos = Pos.posToString(neighbor);
+      if (!seen[pos]) {
+        seen[pos] = true;
+        lookup[end++] = neighbor;
+      }
+    });
   }
 };
 
