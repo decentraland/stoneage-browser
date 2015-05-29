@@ -43,7 +43,7 @@ function Client() {
   }
 
   //allow setting peer id from url
-  config.networking.id = config.networking.id || window.location.hash.substring(1);
+  config.networking.id = window.location.hash.substring(1) || config.networking.id;
   this._setupNetworking();
 
   this.txPool = [];
