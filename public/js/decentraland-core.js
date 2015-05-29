@@ -765,6 +765,7 @@ Miner.prototype.work = function() {
     this.emit('block', this.template);
     // we need to receive a new coinbase to continue
     this.stop();
+    return this.template;
   }
 };
 
@@ -25638,10 +25639,7 @@ module.exports={
   "version": "0.0.2",
   "description": "Blockchain-based decentralized land implementation in JavaScript",
   "main": "index.js",
-  "author": {
-    "name": "Manuel Araoz",
-    "email": "manuelaraoz@gmail.com"
-  },
+  "author": "Manuel Araoz <manuelaraoz@gmail.com>",
   "scripts": {
     "lint": "gulp lint",
     "test": "gulp test",
@@ -25719,24 +25717,13 @@ module.exports={
     "sha512": "=0.0.1"
   },
   "devDependencies": {
-    "bitcore-build": "github:maraoz/bitcore-build#e848a8ba612366ad98abd20e229570dc061a4288",
+    "bitcore-build": "maraoz/bitcore-build#e848a8ba612366ad98abd20e229570dc061a4288",
     "brfs": "^1.2.0",
     "chai": "^1.10.0",
     "gulp": "^3.8.10",
     "sinon": "^1.13.0"
   },
-  "license": "MIT",
-  "gitHead": "763d88d5fa23e44bf5db2acfe5adfbb29fc34d35",
-  "readme": "# decentraland-core\nBlockchain-based decentralized land implementation in JavaScript\n\nThis is a clone of bitcore's codebase, with the following changes:\n- Removed Script-related classes\n- Removed URI, Unit, and other bitcoin-only utils\n- Changed PublicKey to support only compressed keys\n- Removed Transaction Input, Output and related classes\n- Changed Transaction signing logic (using simpler scheme)\n- Transaction now has owner, previous transaction, color, position, version, signature\n- Miner class added \n- Blockchain class added\n\n",
-  "readmeFilename": "README.md",
-  "bugs": {
-    "url": "https://github.com/maraoz/decentraland-core/issues"
-  },
-  "homepage": "https://github.com/maraoz/decentraland-core#readme",
-  "_id": "decentraland-core@0.0.2",
-  "_shasum": "5bfd86d779b96ead3727c818cb0b6e8f1c3d139e",
-  "_from": "git://github.com/maraoz/blockchain.js.git",
-  "_resolved": "git://github.com/maraoz/blockchain.js.git#763d88d5fa23e44bf5db2acfe5adfbb29fc34d35"
+  "license": "MIT"
 }
 
 },{}],66:[function(require,module,exports){

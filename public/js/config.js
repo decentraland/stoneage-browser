@@ -9,6 +9,8 @@ module.exports = {
     //id: 'seed-livenet-maraoz',
     //id: 'seed-livenet-eordano',
     server: {
+      host: 'localhost',
+      port: 9000,
       key: 'igd9tuakix0w9udi',
     },
     seeds: [

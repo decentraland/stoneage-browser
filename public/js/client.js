@@ -13,8 +13,6 @@ var Pos = require('./components/position');
 var _ = core.deps._;
 var $ = core.util.preconditions;
 
-var randomcolor = require('randomcolor');
-
 function Client() {
   events.EventEmitter.call(this);
   var self = this;
@@ -57,7 +55,7 @@ function Client() {
     callback: this.receiveBlock.bind(this)
   });
   this.miner.on('block', this.receiveBlock.bind(this));
-  //this.miner.startMining();
+  this.miner.startMining();
 
   config.networking.metadata = {
     height: 0,
@@ -73,14 +71,18 @@ util.inherits(Client, events.EventEmitter);
 Client.prototype._setupNetworking = function() {
 
   var networking = new Networking(config.networking);
+  var self = this;
 
   networking.on('connection', function(peerID) {
     var n = networking.getConnectedPeers();
-    // console.log('Connected peers', n);
-    networking.send(peerID, 'inv', 'hi');
+    console.log('Connected peers', n);
+    networking.send(peerID, 'height', self.blockchain.getCurrentHeight());
   });
-  networking.on('inv', function(inv) {
-    // console.log('inv', inv);
+  networking.on('height', function(peerID, height) {
+    console.log(peerID, 'height', height);
+  });
+  networking.on('inv', function(peerID, inv) {
+    console.log('inv from peer', peerID, inv);
   });
 
   networking.start();
@@ -88,12 +90,11 @@ Client.prototype._setupNetworking = function() {
 };
 
 Client.prototype.receiveBlock = function(block) {
-  var self = this;
   var result;
 
   try {
     result = this.blockchain.proposeNewBlock(block);
-  } catch (e) { 
+  } catch (e) {
     // TODO: Close connection with whomever sent this
     console.log('Invalid block', e);
     return;
@@ -101,11 +102,9 @@ Client.prototype.receiveBlock = function(block) {
 
   // console.log('Mined', block.hash, block.nonce);
   if (result.confirmed.length) {
-    config.networking.metadata = {
-      height: block.height,
-    };
-    this.retarget();
+    this.networking.broadcast('inv', block.hash);
     this.emit('update');
+    this.retarget();
     this.miner.startMining();
   }
 };
