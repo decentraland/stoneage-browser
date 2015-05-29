@@ -13,7 +13,9 @@ var Sidebar = React.createClass({
     return (
       <div id="sidebar">
         <Mining mining={this.props.client.mining} />
-        <Controlled controlled={this.props.client.controlled} />
+        <Controlled
+            controlled={this.props.client.controlled}
+            client={this.props.client} />
         <PendingTransactions txPool={this.props.client.txPool} />
       </div>
     );

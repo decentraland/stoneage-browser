@@ -78,24 +78,24 @@ Mining.prototype.pauseAndDo = function(what) {
   }
   what.call(this);
   if (wasMining) {
-    this.resume();
+    this.startMining();
   }
 };
 
 Mining.prototype.setNewTarget = function(target) {
-  pauseAndDo(function() {
+  this.pauseAndDo(function() {
     this.target = target;
   });
 };
 
 Mining.prototype.setNewColor = function(color) {
-  pauseAndDo(function() {
+  this.pauseAndDo(function() {
     this.color = color;
   });
 };
 
 Mining.prototype.setNewPublicKey = function(publicKey) {
-  pauseAndDo(function() {
+  this.pauseAndDo(function() {
     this.publicKey = publicKey;
   });
 };
