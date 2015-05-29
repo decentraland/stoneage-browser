@@ -16,14 +16,30 @@ var randomcolor = require('randomcolor');
 
 function Client() {
   events.EventEmitter.call(this);
+  var self = this;
 
   this.blockchain = new Blockchain();
   this.blockchain.proposeNewBlock(Block.genesis);
 
-  this.wallet = {};
-  var privateKey = new core.PrivateKey();
-  this.wallet[privateKey.publicKey.toString()] = privateKey;
-  this.keys = [privateKey.publicKey];
+  var wallet = localStorage.getItem('privateKeys');
+  if (!wallet) {
+    this.wallet = {};
+    var privateKey = new core.PrivateKey();
+    this.wallet[privateKey.publicKey.toString()] = privateKey;
+    this.keys = [privateKey.publicKey];
+    localStorage.setItem('privateKeys', JSON.stringify(
+      _.values(self.wallet).map(function(privateKey) { return privateKey.toString(); })
+    ));
+  } else {
+    this.wallet = {};
+    this.keys = [];
+    var privateKeys = JSON.parse(wallet);
+    privateKeys.forEach(function(privateKey) {
+      var privateKey = new core.PrivateKey(privateKey);
+      self.wallet[privateKey.publicKey.toString()] = privateKey;
+      self.keys.push(privateKey.publicKey.toString());
+    });
+  }
 
   this.txPool = [];
   this.focusPixel = null;
