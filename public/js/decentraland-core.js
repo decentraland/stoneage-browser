@@ -1094,6 +1094,10 @@ Blockchain.prototype.getBlock = function(hash) {
   return this.blockStore.get(hash);
 };
 
+Blockchain.prototype.getTransaction = function(hash) {
+  return this.txStore.get(hash);
+};
+
 Blockchain.prototype.getTipBlock = function() {
   return this.blockStore.get(this.tip);
 };

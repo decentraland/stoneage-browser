@@ -4,17 +4,12 @@ var core = require('decentraland-core');
 var $ = core.util.preconditions;
 var _ = core.deps._;
 var events = require('events');
-var bufferUtils = core.util.buffer;
-var Hash = core.crypto.Hash;
-var Transaction = core.Transaction;
-var Miner = core.Miner;
-var Pos = require('./components/position');
 var Block = core.Block;
 
 var util = require('util');
 var inherits = util.inherits;
 
-function Mining (opts) {
+function Mining(opts) {
   $.checkArgument(_.isObject(opts));
   var self = this;
 
@@ -34,7 +29,7 @@ function Mining (opts) {
   this.target = opts.target;
   this.color = opts.color;
 
-  this.enableMining = true;
+  this.enableMining = opts.enableMining;
   this.mining = false;
 }
 inherits(Mining, events.EventEmitter);
@@ -52,7 +47,9 @@ Mining.prototype.startMining = function() {
   opts.target = this.target;
   opts.publicKey = this.publicKey.toString();
   opts.previous = this.client.blockchain.getTipBlock().toString();
-  opts.txPool = this.client.txPool.map(function(tx) { return miner.addTransaction(tx); });
+  opts.txPool = this.client.txPool.map(function(tx) {
+    return miner.addTransaction(tx);
+  });
 
   this.mining = true;
   this.worker.postMessage({
@@ -101,7 +98,10 @@ Mining.prototype.setNewPublicKey = function(publicKey) {
 };
 
 Mining.prototype.addTransaction = function(transaction) {
-  this.worker.postMessage({type: 'ADDTX', payload: transaction.toString()});
+  this.worker.postMessage({
+    type: 'ADDTX',
+    payload: transaction.toString()
+  });
 };
 
 Mining.prototype.pause = function() {

@@ -26,13 +26,13 @@ Networking.prototype._setupServerConnection = function() {
 
   var self = this;
 
-  this.server.on('connection', function(dataConnection) {
-    self._setupPeerConnection(dataConnection);
-  });
-
   this.server.on('open', function(id) {
     // called when connection to server is ready
     console.log('Server connection established as', id);
+  });
+
+  this.server.on('connection', function(dataConnection) {
+    self._setupPeerConnection(dataConnection);
   });
 
   this.server.on('call', function(mediaConnection) {
@@ -49,67 +49,58 @@ Networking.prototype._setupServerConnection = function() {
   this.server.on('disconnected', function() {
     // Emitted when the peer is disconnected from the signalling server
     //self.server.reconnect();
+    console.log('disconnected');
   });
 
   this.server.on('error', function(err) {
-    console.log('Server connection error', err);
     // mostly fatal errors
     switch (err.type) {
+      case 'peer-unavailable':
+        // ERROR
+        // The peer you're trying to connect to does not exist.
+        console.log('peer unavailable');
+        break;
       case 'browser-incompatible':
         // ERROR FATAL
         //The client's browser does not support some or all WebRTC
         //features that you are trying to use.
-        break;
       case 'disconnected':
         // ERROR
         // You've already disconnected this peer from the server and can
         // no longer make any new connections on it.
-        break;
       case 'invalid-id':
         // ERROR FATAL
         // The ID passed into the Peer constructor contains illegal characters.
-        break;
       case 'invalid-key':
         // ERROR FATAL
         // The API key passed into the Peer constructor contains illegal
         // characters or is not in the system (cloud server only).
-        break;
       case 'network':
         // ERROR
         // Lost or cannot establish a connection to the signalling server.
-        break;
-      case 'peer-unavailable':
-        // ERROR
-        // The peer you're trying to connect to does not exist.
-        break;
       case 'ssl-unavailable':
         // ERROR FATAL
         // PeerJS is being used securely, but the cloud server does
         // not support SSL. Use a custom PeerServer.
-        break;
       case 'server-error':
         // ERROR FATAL
         //Unable to reach the server.
-        break;
       case 'socket-error':
         // ERROR FATAL
         // An error from the underlying socket.
-        break;
       case 'socket-closed':
         // ERROR FATAL
         // The underlying socket closed unexpectedly.
-        break;
       case 'unavailable-id':
         // ERROR SOMETIMES FATAL
         // The ID passed into the Peer constructor is already taken.
         // This error is not fatal if your peer has open peer-to-peer connections.
         // This can happen if you attempt to reconnect a peer that has been
         // disconnected from the server, but its old ID has now been taken.
-        break;
       case 'webrtc':
         // ERROR
         // Native WebRTC errors.
-        break;
+        console.log('Server connection error of type', err.type, err);
     }
 
   });
@@ -119,11 +110,11 @@ Networking.prototype._setupServerConnection = function() {
 Networking.prototype.start = function() {
   var self = this;
 
+  console.log('my own id', self.server.id);
   _.each(this.seeds, function(seed) {
     if (seed === self.server.id) {
       return;
     }
-    console.log('self.server.id', self.server.id);
     console.log('attempting to connect to', seed);
     var dataConnection = self.server.connect(seed, {
       label: undefined, // will be generated at random
@@ -145,10 +136,6 @@ Networking.prototype._setupPeerConnection = function(dataConnection) {
 
   $.checkState(!this.peers[peerID], 'Tried to setup connection to ' + peerID + ' twice.');
 
-  console.log('Setting up Peer connection with metadata', dc.metadata);
-
-  this.peers[peerID] = dc;
-
   dc.on('data', function(data) {
     var type = data.type;
     var payload = data.payload;
@@ -159,9 +146,12 @@ Networking.prototype._setupPeerConnection = function(dataConnection) {
     self.emit(type, peerID, payload);
   });
 
+  if (dc.open) {
+    self._addPeer(dc);
+  }
   dc.on('open', function() {
     // data connection is now open
-    self.emit('connection', peerID);
+    self._addPeer(dc);
   });
 
   dc.on('close', function() {
@@ -175,6 +165,16 @@ Networking.prototype._setupPeerConnection = function(dataConnection) {
   });
 };
 
+Networking.prototype._addPeer = function(dataConnection) {
+  var dc = dataConnection;
+  var peerID = dc.peer;
+
+  console.log('adding peer', peerID);
+  this.peers[peerID] = dc;
+
+  this.emit('connection', peerID);
+};
+
 Networking.prototype._cleanupPeerConnection = function(dataConnection) {
   $.checkArgument(!_.isUndefined(dataConnection), 'dataConnection is required');
 
@@ -184,6 +184,13 @@ Networking.prototype._cleanupPeerConnection = function(dataConnection) {
   $.checkState(this.peers[peerID], 'Attempted to cleanup non-existent connection to ' + peerID);
   delete this.peers[peerID];
 
+};
+
+Networking.prototype.closeConnection = function(peerID) {
+  $.checkArgument(!_.isString(peerID), 'peerID is a required string');
+  $.checkArgument(this.peers[peerID], 'Attempted to close non-existent connection to ' + peerID);
+  this.peers[peerID].disconnect();
+  this._cleanupPeerConnection();
 };
 
 
