@@ -9,6 +9,7 @@ var Blockchain = core.Blockchain;
 var Miner = require('./mining');
 var Networking = require('./networking');
 var config = require('./config.js');
+var Pos = require('./components/position');
 var _ = core.deps._;
 
 var randomcolor = require('randomcolor');
