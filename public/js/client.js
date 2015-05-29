@@ -13,8 +13,6 @@ var Pos = require('./components/position');
 var _ = core.deps._;
 var $ = core.util.preconditions;
 
-var randomcolor = require('randomcolor');
-
 function Client() {
   events.EventEmitter.call(this);
   var self = this;
@@ -29,7 +27,9 @@ function Client() {
     this.wallet[privateKey.publicKey.toString()] = privateKey;
     this.keys = [privateKey.publicKey];
     localStorage.setItem('privateKeys', JSON.stringify(
-      _.values(self.wallet).map(function(privateKey) { return privateKey.toString(); })
+      _.values(self.wallet).map(function(privateKey) {
+        return privateKey.toString();
+      })
     ));
   } else {
     this.wallet = {};
@@ -42,9 +42,14 @@ function Client() {
     });
   }
 
+  //allow setting peer id from url
+  config.networking.id = window.location.hash.substring(1) || config.networking.id;
+  this._setupNetworking();
+
   this.txPool = [];
   this.focusPixel = null;
 
+  var enableMining = this.networking.id === 'seed-livenet-maraoz';
   this.miner = new Miner({
     client: this,
     publicKey: this.keys[0],
@@ -54,58 +59,72 @@ function Client() {
     },
     color: 0xff0000,
     txPool: this.txPool,
-    callback: this.receiveBlock.bind(this)
+    callback: this.receiveBlock.bind(this),
+    enableMining: enableMining,
   });
   this.miner.on('block', this.receiveBlock.bind(this));
+
   this.miner.startMining();
-
-  config.networking.metadata = {
-    height: 0,
-  };
-
-  //allow setting peer id from url
-  config.networking.id = config.networking.id || window.location.hash.substring(1);
-
-  this._setupNetworking();
 }
 util.inherits(Client, events.EventEmitter);
 
 Client.prototype._setupNetworking = function() {
 
   var networking = new Networking(config.networking);
+  var self = this;
 
   networking.on('connection', function(peerID) {
-    var n = networking.getConnectedPeers();
-    // console.log('Connected peers', n);
-    networking.send(peerID, 'inv', 'hi');
+    console.log('new connection', peerID);
+    networking.send(peerID, 'height', self.blockchain.getCurrentHeight());
   });
-  networking.on('inv', function(inv) {
-    // console.log('inv', inv);
+  networking.on('height', function(peerID, height) {
+    console.log('Connected to', peerID, '- height', height);
+  });
+  networking.on('inv', function(peerID, inv) {
+    console.log('inv from peer', peerID, inv);
+    var block = self.blockchain.getBlock(inv);
+    if (block) {
+      return;
+    }
+    networking.send(peerID, 'get', inv);
+  });
+  networking.on('get', function(peerID, inv) {
+    console.log('get from peer', peerID, inv);
+    var block = self.blockchain.getBlock(inv);
+    if (block) {
+      networking.send(peerID, 'block', block.toBuffer().toString('hex'));
+    }
+  });
+  networking.on('block', function(peerID, block) {
+    console.log('block from peer', peerID, block);
+    self.receiveBlock(Block.fromBuffer(block), peerID);
   });
 
   networking.start();
   this.networking = networking;
 };
 
-Client.prototype.receiveBlock = function(block) {
-  var self = this;
+Client.prototype.receiveBlock = function(block, peerID) {
   var result;
 
+  var hasPrev = this.blockchain.hasData(block.prevHash);
+  if (!hasPrev) {
+    this.networking.send(peerID, 'get', block.prevHash);
+    return;
+  }
   try {
     result = this.blockchain.proposeNewBlock(block);
-  } catch (e) { 
-    // TODO: Close connection with whomever sent this
-    console.log('Invalid block', e);
+  } catch (e) {
+    console.log('Invalid block', block.id, 'from peer', peerID, e);
+    //this.networking.closeConnection(peerID);
     return;
   }
 
   // console.log('Mined', block.hash, block.nonce);
   if (result.confirmed.length) {
-    config.networking.metadata = {
-      height: block.height,
-    };
-    this.retarget();
+    this.networking.broadcast('inv', block.hash);
     this.emit('update');
+    this.retarget();
     this.miner.startMining();
   }
 };
