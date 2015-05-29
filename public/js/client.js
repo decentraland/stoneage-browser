@@ -116,7 +116,7 @@ Client.prototype.receiveBlock = function(block, peerID) {
     result = this.blockchain.proposeNewBlock(block);
   } catch (e) {
     console.log('Invalid block', block.id, 'from peer', peerID, e);
-    this.networking.closeConnection(peerID);
+    //this.networking.closeConnection(peerID);
     return;
   }
 
