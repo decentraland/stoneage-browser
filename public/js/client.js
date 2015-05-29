@@ -11,19 +11,36 @@ var Networking = require('./networking');
 var config = require('./config.js');
 var Pos = require('./components/position');
 var _ = core.deps._;
+var $ = core.util.preconditions;
 
 var randomcolor = require('randomcolor');
 
 function Client() {
   events.EventEmitter.call(this);
+  var self = this;
 
   this.blockchain = new Blockchain();
   this.blockchain.proposeNewBlock(Block.genesis);
 
-  this.wallet = {};
-  var privateKey = new core.PrivateKey();
-  this.wallet[privateKey.publicKey.toString()] = privateKey;
-  this.keys = [privateKey.publicKey];
+  var wallet = localStorage.getItem('privateKeys');
+  if (!wallet) {
+    this.wallet = {};
+    var privateKey = new core.PrivateKey();
+    this.wallet[privateKey.publicKey.toString()] = privateKey;
+    this.keys = [privateKey.publicKey];
+    localStorage.setItem('privateKeys', JSON.stringify(
+      _.values(self.wallet).map(function(privateKey) { return privateKey.toString(); })
+    ));
+  } else {
+    this.wallet = {};
+    this.keys = [];
+    var privateKeys = JSON.parse(wallet);
+    privateKeys.forEach(function(privateKey) {
+      var privateKey = new core.PrivateKey(privateKey);
+      self.wallet[privateKey.publicKey.toString()] = privateKey;
+      self.keys.push(privateKey.publicKey.toString());
+    });
+  }
 
   this.txPool = [];
   this.focusPixel = null;
@@ -59,11 +76,11 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('connection', function(peerID) {
     var n = networking.getConnectedPeers();
-    console.log('Connected peers', n);
+    // console.log('Connected peers', n);
     networking.send(peerID, 'inv', 'hi');
   });
   networking.on('inv', function(inv) {
-    console.log('inv', inv);
+    // console.log('inv', inv);
   });
 
   networking.start();
@@ -82,13 +99,13 @@ Client.prototype.receiveBlock = function(block) {
     return;
   }
 
-  console.log('Mined', block.hash, block.nonce);
+  // console.log('Mined', block.hash, block.nonce);
   if (result.confirmed.length) {
     config.networking.metadata = {
       height: block.height,
     };
-    this.emit('update');
     this.retarget();
+    this.emit('update');
     this.miner.startMining();
   }
 };
@@ -118,6 +135,34 @@ Client.prototype.retarget = function() {
   }
 };
 
+Client.prototype.makeTransaction = function(position, color) {
+  var posStr = Pos.posToString(position);
+  var tx = new core.Transaction()
+    .from(this.blockchain.pixels[posStr])
+    .colored(color)
+    .to(this.blockchain.pixels[posStr].owner)
+    .sign(this.wallet[this.blockchain.pixels[posStr].owner.toString()]);
+  this.addTransaction(tx);
+};
+
+Client.prototype.addTransaction = function(tx) {
+  $.checkArgument(tx instanceof core.Transaction, 'Invalid type for transaction');
+  $.checkArgument(
+    core.Transaction.Sighash.verify(
+      tx, tx.signature, this.blockchain.pixels[Pos.posToString(tx.position)].owner
+    ), 'Invalid signature'
+  );
+
+  this.txPool.push(tx);
+  this.miner.addTransaction(tx);
+  this.emit('update');
+};
+
+Client.prototype.setTarget = function(pos) {
+  this.miner.setTarget(pos);
+  this.emit('update');
+};
+
 Client.prototype.getState = function() {
   var self = this;
   var pixelValues = _.values(this.blockchain.pixels);
@@ -131,7 +176,8 @@ Client.prototype.getState = function() {
     ),
     txPool: this.txPool,
     blocks: this.blockchain.height,
-    focusPixel: this.focusPixel
+    focusPixel: this.focusPixel,
+    makeTx: this.makeTransaction.bind(this)
   };
 };
 

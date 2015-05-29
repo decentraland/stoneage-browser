@@ -47,8 +47,10 @@ var mine = function(opts) {
 };
 
 var nextBlock = function() {
-  miner.work();
-  minerTimeout = setTimeout(nextBlock, 0);
+  var block = miner.work();
+  if (!block) {
+    minerTimeout = setTimeout(nextBlock, 0);
+  }
 };
 
 var addTx = function(tx) {
