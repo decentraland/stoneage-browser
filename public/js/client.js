@@ -38,7 +38,7 @@ function Client() {
     txPool: this.txPool,
     callback: this.receiveBlock.bind(this)
   });
-  //this.miner.startMining();
+  this.miner.startMining();
 
   config.networking.metadata = {
     height: 0,
