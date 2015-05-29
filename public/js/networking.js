@@ -48,7 +48,7 @@ Networking.prototype._setupServerConnection = function() {
 
   this.server.on('disconnected', function() {
     // Emitted when the peer is disconnected from the signalling server
-    self.server.reconnect();
+    //self.server.reconnect();
   });
 
   this.server.on('error', function(err) {
