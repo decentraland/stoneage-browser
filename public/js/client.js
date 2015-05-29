@@ -3,7 +3,6 @@
 var util = require('util');
 var events = require('events');
 
-var Pos = require('./components/position');
 var core = require('decentraland-core');
 var Block = core.Block;
 var Blockchain = core.Blockchain;
@@ -14,8 +13,6 @@ var randomcolor = require('randomcolor');
 
 function Client() {
   events.EventEmitter.call(this);
-
-  var self = this;
 
   this.blockchain = new Blockchain();
   this.blockchain.proposeNewBlock(Block.genesis);
@@ -41,13 +38,12 @@ function Client() {
 util.inherits(Client, events.EventEmitter);
 
 Client.prototype.receiveBlock = function(block) {
-  var self = this;
   var result = this.blockchain.proposeNewBlock(block);
   // if (this.blockchain.isInvalidBlock(block)) {
   // TODO: Close connection with whomever sent this
   //  return;
   // }
-  console.log('Mined', block.hash, block.nonce);
+  console.log('Mined', block.hash, 'nonce=', block.nonce);
   if (result.confirmed.length) {
     this.emit('update');
     this.miner.color = parseInt(randomcolor().substr(1, 7), 16) * 256;

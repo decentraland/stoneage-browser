@@ -14,7 +14,9 @@
   "dependencies": {
     "decentraland-core": "0.0.2",
     "bootstrap": "^3.3.4",
+    "express": "^4.12.4",
     "express-jsxtransform": "^3.0.0",
+    "express-ws": "^0.2.6",
     "jquery": "^2.1.4",
     "react": "^0.13.3",
     "react-bootstrap": "^0.22.6",
