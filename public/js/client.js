@@ -13,12 +13,17 @@ var Pos = require('./components/position');
 var _ = core.deps._;
 var $ = core.util.preconditions;
 
+var LocalStorageTxStore = require('./store/transaction');
+var LocalStorageBlockStore = require('./store/block');
+
 function Client() {
   events.EventEmitter.call(this);
   var self = this;
 
   this.blockchain = new Blockchain();
-  this.blockchain.proposeNewBlock(Block.genesis);
+  this.blockchain.blockStore = LocalStorageBlockStore;
+  this.blockchain.txStore = LocalStorageTxStore;
+  this.loadBlockchain();
 
   var wallet = localStorage.getItem('privateKeys');
   if (!wallet) {
@@ -55,18 +60,39 @@ function Client() {
     publicKey: this.keys[0],
     target: {
       x: 0,
-      y: 1
+      y: 0
     },
     color: 0xff0000,
     txPool: this.txPool,
     callback: this.receiveBlock.bind(this),
     enableMining: enableMining,
   });
+  this.retarget();
   this.miner.on('block', this.receiveBlock.bind(this));
 
   this.miner.startMining();
 }
 util.inherits(Client, events.EventEmitter);
+
+Client.prototype.loadBlockchain = function() {
+  var tip = localStorage.getItem('tip');
+
+  if (!tip) {
+    this.blockchain.proposeNewBlock(core.Block.genesis);
+    return;
+  }
+
+  var blocks = [];
+  var block;
+  while (block = this.blockchain.getBlock(tip)) {
+    blocks.push(block);
+    tip = block.prevHash;
+  }
+  blocks.reverse();
+  blocks.map(function(block) {
+    this.blockchain.proposeNewBlock(block);
+  }, this);
+};
 
 Client.prototype._setupNetworking = function() {
 
@@ -166,6 +192,7 @@ Client.prototype.receiveBlock = function(block, peerID) {
     //this.networking.closeConnection(peerID);
     return;
   }
+  localStorage.setItem('tip', this.blockchain.tip);
 
   if (result.confirmed.length) {
 
