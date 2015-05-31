@@ -23,7 +23,7 @@ function Mining(opts) {
     console.log('error', arguments);
   };
 
-  this.bits = opts.bits || 0x1f0fffff;
+  this.bits = opts.bits || 0x2f0fffff;
   this.client = opts.client;
   this.publicKey = opts.publicKey;
   this.target = opts.target;
@@ -48,8 +48,8 @@ Mining.prototype.startMining = function() {
   opts.publicKey = this.publicKey.toString();
   opts.previous = this.client.blockchain.getTipBlock().toString();
   opts.txPool = this.client.txPool.map(function(tx) {
-    return miner.addTransaction(tx);
-  });
+    return tx.toString();
+  });;
 
   this.mining = true;
   this.worker.postMessage({

@@ -15,7 +15,11 @@ var Pixel = React.createClass({
     var left = Pos.tilePositionLeft(pixel.position.x);
     var top = Pos.tilePositionTop(pixel.position.y);
     var id = "pixel_" + posStr;
-    var color = '#' + pixel.color.toString(16).substr(0, 6);
+    var color = pixel.color.toString(16).substr(0, 6);
+    while (color.length < 6) {
+      color = '0' + color;
+    }
+    color = '#' + color;
     return (
       <a
         id={id}
