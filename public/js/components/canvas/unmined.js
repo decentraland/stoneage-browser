@@ -4,12 +4,13 @@ var React = require('react');
 var ReactBootstrap = require('react-bootstrap');
 var OverlayTrigger = ReactBootstrap.OverlayTrigger;
 var Popover = ReactBootstrap.Popover;
+var client = require('../../client');
 
 var Pos = require('../position.js');
 
 var Unmined = React.createClass({
   click: function() {
-    this.props.client.setFocusPixel(this.props.pos);
+    client.setFocusPixel(this.props.pos);
   },
   render: function() {
     var posStr = Pos.posToString(this.props.pos);
@@ -22,7 +23,7 @@ var Unmined = React.createClass({
         id={id}
         className="pixel unmined"
         style={{left: left + 'px', top: top + 'px'}}
-        onClick={this.props.click}
+        onClick={this.click}
         tabIndex="0"
         role="button"
       ></a>

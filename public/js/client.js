@@ -227,6 +227,10 @@ Client.prototype.makeTransaction = function(position, color) {
   this.addTransaction(tx);
 };
 
+Client.prototype.switchMining = function() {
+  this.miner.switchMining();
+};
+
 Client.prototype.addTransaction = function(tx) {
   $.checkArgument(tx instanceof core.Transaction, 'Invalid type for transaction');
   $.checkArgument(
@@ -241,7 +245,7 @@ Client.prototype.addTransaction = function(tx) {
 };
 
 Client.prototype.setTarget = function(pos) {
-  this.miner.setTarget(pos);
+  this.miner.setNewTarget(pos);
   this.emit('update');
 };
 
@@ -255,22 +259,18 @@ Client.prototype.getState = function() {
   var pixelValues = _.values(this.blockchain.pixels);
   var focusPixel = this.focusPixel ? {
       position: this.focusPixel,
-      controlled: !!this.wallet[this.blockchain.pixels[Pos.posToString(this.focusPixel)].owner],
       lastTx: this.blockchain.pixels[Pos.posToString(this.focusPixel)]
     } : null;
   return {
     focusPixel: focusPixel,
     pixels: pixelValues,
-    mining: this.miner,
     controlled: pixelValues.filter(
       function(block) {
         return !!(self.wallet[block.owner]);
       }
     ),
     txPool: this.txPool,
-    blocks: this.blockchain.height,
-    makeTx: this.makeTransaction.bind(this),
-    setFocusPixel: this.setFocusPixel.bind(this),
+    blocks: this.blockchain.height
   };
 };
 

@@ -4,12 +4,13 @@ var React = require('react');
 var ReactBootstrap = require('react-bootstrap');
 var OverlayTrigger = ReactBootstrap.OverlayTrigger;
 var Popover = ReactBootstrap.Popover;
+var client = require('../../client');
 
 var Pos = require('../position');
 
 var Pixel = React.createClass({
   click: function() {
-    this.props.client.setFocusPixel(this.props.pixel.position);
+    client.setFocusPixel(this.props.pixel.position);
   },
   render: function() {
     var pixel = this.props.pixel;

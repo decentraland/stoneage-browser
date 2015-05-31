@@ -17,11 +17,10 @@ var Sidebar = React.createClass({
           <MinedPixel client={this.props.client} pixel={this.props.client.focusPixel} />
         : <UnminedPixel client={this.props.client} pixel={this.props.client.focusPixel} />
       : '';
-    console.log(this.props.client.focusPixel);
     return (
       <div id="sidebar">
         {focusPixel}
-        <Mining mining={this.props.client.mining} />
+        <Mining />
         <Controlled
             controlled={this.props.client.controlled}
             client={this.props.client} />

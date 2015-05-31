@@ -1,32 +1,30 @@
 'use strict';
 
 var React = require('react');
+var client = require('../../client');
 
 var Mining = React.createClass({
   getInitialState: function() {
     return {
-      mining: this.props.mining.enableMining,
-      color: this.props.mining.color
+      mining: client.miner.enableMining,
+      color: client.miner.color
     };
   },
-  switchMiner: function() {
-    this.props.mining.switchMining();
+  switchMining: function() {
+    client.switchMining();
     this.setState(this.getInitialState());
   },
   changeTargetColor: function(event) {
     var color = parseInt(event.nativeEvent.target.value.substr(1, 6), 16);
-    this.props.mining.setNewColor(color);
-    this.setState({
-      mining: this.props.mining.enableMining,
-      color: color
-    });
+    client.setNewColor(color);
+    this.setState(this.getInitialState());
   },
   render: function() {
     var buttonText = this.state.mining ? 'Mining Enabled' : 'Mining Disabled';
     var buttonClass = 'btn btn-sm ' + (this.state.mining ? 'btn-success' : 'btn-warning');
-    var bits = '0x' + this.props.mining.bits.toString(16);
+    var bits = '0x' + client.miner.bits.toString(16);
     var color = this.state.color.toString(16);
-    var publicKey = this.props.mining.publicKey.toString();
+    var publicKey = client.miner.publicKey.toString();
     publicKey = publicKey.substr(0, 6) + '...' + publicKey.substr(publicKey.length - 4, 4);
     while (color.length < 6) {
       color = '0' + color;
@@ -38,13 +36,13 @@ var Mining = React.createClass({
         <ul>
           <li>
             <button
-              onClick={this.switchMiner}
+              onClick={this.switchMining}
               className={buttonClass}
             >
               {buttonText}
             </button>
           </li>
-          <li><strong>Mining Target</strong>: {this.props.mining.target.x}, {this.props.mining.target.y}</li>
+          <li><strong>Mining Target</strong>: {client.miner.target.x}, {client.miner.target.y}</li>
           <li><strong>Current Difficulty</strong>: {bits}</li>
           <li>
             <strong>Target Color</strong>:
