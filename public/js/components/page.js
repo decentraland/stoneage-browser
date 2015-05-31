@@ -15,7 +15,7 @@ function PageConstructor(client) {
     render: function() {
       return (
         <div id="content">
-          <Canvas pixels={this.state.pixels} />
+          <Canvas client={this.state} pixels={this.state.pixels} />
           <Sidebar client={this.state} />
         </div>
       )

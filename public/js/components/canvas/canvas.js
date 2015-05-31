@@ -11,12 +11,13 @@ var Canvas = React.createClass({
     var used = {};
     var unmined = [];
     var pixels = [];
+    var self = this;
     this.props.pixels.forEach(function(pixel) {
       var posStr = Pos.posToString(pixel.position);
       used[posStr] = true;
       posStr = 'pixel_' + posStr;
       pixels.push(
-        <Pixel key={posStr} pixel={pixel} />
+        <Pixel client={self.props.client} key={posStr} pixel={pixel} />
       );
       Pos.neighbors(pixel.position).forEach(function(neighbor) {
         unmined.push(neighbor);
@@ -28,7 +29,7 @@ var Canvas = React.createClass({
         used[posStr] = true;
         posStr = 'unmined_' + posStr;
         pixels.push(
-          <Unmined key={posStr} pos={pos} />
+          <Unmined client={self.props.client} key={posStr} pos={pos} />
         );
       }
     });

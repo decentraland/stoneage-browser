@@ -8,6 +8,9 @@ var Popover = ReactBootstrap.Popover;
 var Pos = require('../position');
 
 var Pixel = React.createClass({
+  click: function() {
+    this.props.client.setFocusPixel(this.props.pixel.position);
+  },
   render: function() {
     var pixel = this.props.pixel;
     var posStr = Pos.posToString(pixel.position);
@@ -25,6 +28,7 @@ var Pixel = React.createClass({
         id={id}
         className="pixel"
         style={{left: left + 'px', top: top + 'px', backgroundColor: color}}
+        onClick={this.click}
         tabIndex="0"
         role="button"
       ></a>
