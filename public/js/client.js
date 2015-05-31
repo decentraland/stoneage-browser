@@ -54,7 +54,6 @@ function Client() {
   this.txPool = [];
   this.focusPixel = null;
 
-  var enableMining = this.networking.id === 'seed-livenet-maraoz';
   this.miner = new Miner({
     client: this,
     publicKey: this.keys[0],
@@ -65,7 +64,7 @@ function Client() {
     color: 0xff0000,
     txPool: this.txPool,
     callback: this.receiveBlock.bind(this),
-    enableMining: enableMining,
+    enableMining: false
   });
   this.retarget();
   this.miner.on('block', this.receiveBlock.bind(this));
@@ -102,6 +101,7 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('connection', function(peerID) {
     console.log('new connection', peerID);
+    networking.send(peerID, 'getpeers', {});
     networking.send(peerID, 'getblocks', self.blockchain.getBlockLocator());
   });
 
@@ -118,10 +118,30 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('get', function(peerID, inv) {
     console.log('get from peer', peerID, inv);
-    var block = self.blockchain.getBlock(inv);
-    if (block) {
-      networking.send(peerID, 'block', block.toBuffer().toString('hex'));
-    }
+    inv.forEach(function(blockhash) {
+      var block = self.blockchain.getBlock(blockhash);
+      if (block) {
+        networking.send(peerID, 'block', block.toString());
+      }
+    });
+  });
+
+  networking.on('getpeers', function(peerID, inv) {
+    networking.send(peerID, 'peers', _.keys(networking.peers));
+  });
+
+  networking.on('peers', function(peerID, inv) {
+    inv.forEach(function(peer) {
+      if (!networking.peers[peer]) {
+        var dataConnection = networking.server.connect(peer, {
+          label: networking.server.id,
+          metadata: {},
+          serialization: 'binary',
+          reliable: false
+        });
+        networking._setupPeerConnection(dataConnection);
+      }
+    });
   });
 
   networking.on('getblocks', function(peerID, inv) {
