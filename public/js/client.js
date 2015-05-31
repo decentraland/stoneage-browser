@@ -245,10 +245,21 @@ Client.prototype.setTarget = function(pos) {
   this.emit('update');
 };
 
+Client.prototype.setFocusPixel = function(pos) {
+  this.focusPixel = pos;
+  this.emit('update');
+};
+
 Client.prototype.getState = function() {
   var self = this;
   var pixelValues = _.values(this.blockchain.pixels);
+  var focusPixel = this.focusPixel ? {
+      position: this.focusPixel,
+      controlled: !!this.wallet[this.blockchain.pixels[Pos.posToString(this.focusPixel)].owner],
+      lastTx: this.blockchain.pixels[Pos.posToString(this.focusPixel)]
+    } : null;
   return {
+    focusPixel: focusPixel,
     pixels: pixelValues,
     mining: this.miner,
     controlled: pixelValues.filter(
@@ -258,8 +269,8 @@ Client.prototype.getState = function() {
     ),
     txPool: this.txPool,
     blocks: this.blockchain.height,
-    focusPixel: this.focusPixel,
-    makeTx: this.makeTransaction.bind(this)
+    makeTx: this.makeTransaction.bind(this),
+    setFocusPixel: this.setFocusPixel.bind(this),
   };
 };
 
