@@ -23,7 +23,7 @@ function Mining(opts) {
     console.log('error', arguments);
   };
 
-  this.bits = opts.bits || 0x2f0fffff;
+  this.bits = opts.bits || 0x1fefffff;
   this.client = opts.client;
   this.publicKey = opts.publicKey;
   this.target = opts.target;

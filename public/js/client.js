@@ -72,6 +72,7 @@ Client.prototype._setupNetworking = function() {
 
   var networking = new Networking(config.networking);
   var self = this;
+  var after = {};
 
   networking.on('connection', function(peerID) {
     console.log('new connection', peerID);
@@ -127,7 +128,6 @@ Client.prototype._setupNetworking = function() {
 
       // No previous hash; ask it and store block to process later
       after[unserialized.prevHash] = unserialized;
-      networking.send(peerID, 'block', block.toBuffer().toString('hex'));
 
     } else {
 
@@ -142,8 +142,8 @@ Client.prototype._setupNetworking = function() {
         hash = unserialized.hash;
       }
     }
-
     networking.send(peerID, 'getblocks', self.blockchain.getBlockLocator());
+
   });
 
   networking.start();
