@@ -126,18 +126,22 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('inv', function(peerID, inv) {
     console.log('inv from peer', peerID, inv);
+    var unknown = [];
     inv.forEach(function(hash) {
       var block = self.blockchain.getBlock(hash);
       if (block) {
         return;
       }
       self.inventory[hash] = true;
-      networking.send(peerID, 'get', inv);
+      unknown.push(hash);
     });
+    if (unknown.length !== 0) {
+      networking.send(peerID, 'getdata', unknown);
+    }
   });
 
-  networking.on('get', function(peerID, inv) {
-    console.log('get from peer', peerID, inv);
+  networking.on('getdata', function(peerID, inv) {
+    console.log('getdata from peer', peerID, inv);
     inv.forEach(function(blockhash) {
       var block = self.blockchain.getBlock(blockhash);
       if (block) {
@@ -146,39 +150,42 @@ Client.prototype._setupNetworking = function() {
     });
   });
 
-
-  networking.on('getblocks', function(peerID, inv) {
-    console.log('getblocks from peer', peerID, inv);
-    var last = inv.length - 1;
-    while (last >= 0 && _.isUndefined(self.blockchain.height[inv[last]])) {
-      last--;
-    }
-    var first;
-    if (last === -1) {
-      first = Block.genesis.hash;
-    } else {
-      first = inv[last];
+  networking.on('getblocks', function(peerID, locator) {
+    console.log('getblocks from peer', peerID, locator);
+    var i = 0;
+    var first = Block.genesis.hash;
+    while (i < locator.length) {
+      if (!_.isUndefined(self.blockchain.height[locator[i]])) {
+        first = locator[i];
+        break;
+      }
+      i++;
     }
     first = self.blockchain.next[first];
-    var blocks = [];
-    while (blocks.length < 50 && self.blockchain.next[first]) {
-      blocks.push(first);
-      first = self.blockchain.next[first];
+    var blocks = [first];
+    var current = first;
+    while (blocks.length < 50 && self.blockchain.next[current]) {
+      current = self.blockchain.next[current];
+      blocks.push(current);
     }
     networking.send(peerID, 'inv', blocks);
   });
 
   networking.on('block', function(peerID, block) {
-    console.log('block from peer', peerID, block);
 
     var unserialized = Block.fromBuffer(block);
+    var hash = unserialized.hash;
+
+    console.log('block from peer', peerID, hash);
+    delete self.inventory[hash];
 
     if (!self.blockchain.getBlock(unserialized.prevHash)) {
-      // No previous hash; ask it and store block to process later
+      // No previous hash; ask it and queue block to process later
       after[unserialized.prevHash] = unserialized;
+      console.log('prevhash', unserialized.prevHash);
+      console.log('No previous hash; ask it and queue block to process later');
     } else {
       self.receiveBlock(unserialized, peerID);
-      var hash = unserialized.hash;
 
       // Process queued blocks
       while (after[hash]) {
@@ -188,7 +195,11 @@ Client.prototype._setupNetworking = function() {
         hash = unserialized.hash;
       }
     }
-    networking.send(peerID, 'getblocks', self.blockchain.getBlockLocator());
+    if (_.keys(self.inventory).length === 0) {
+      var locator = self.blockchain.getBlockLocator();
+      console.log('locator', locator);
+      networking.send(peerID, 'getblocks', locator);
+    }
 
   });
 
@@ -202,9 +213,11 @@ Client.prototype.receiveBlock = function(block, peerID) {
 
   var hasPrev = this.blockchain.hasData(block.prevHash);
   if (!hasPrev) {
-    this.networking.send(peerID, 'get', block.prevHash);
+    console.log('dont have data on prevhash for received block');
+    this.networking.send(peerID, 'getblocks', this.blockchain.getBlockLocator());
     return;
   }
+
   try {
     result = this.blockchain.proposeNewBlock(block);
   } catch (e) {
@@ -213,6 +226,10 @@ Client.prototype.receiveBlock = function(block, peerID) {
     return;
   }
   localStorage.setItem('tip', this.blockchain.tip);
+  if (block.height % 512 === 0) {
+    // TODO: retarget
+    console.log('retarget');
+  }
 
   if (result.confirmed.length) {
 
