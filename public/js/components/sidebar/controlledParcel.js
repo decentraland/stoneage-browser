@@ -17,7 +17,7 @@ var ControlledParcel = React.createClass({
     });
   },
   craftTx: function() {
-    this.props.client.makeTx(this.props.pixel.position, this.state.color);
+    client.makeTransaction(this.props.pixel.position, this.state.color);
   },
   render: function() {
     var pos = Pos.posToHumanString(this.props.pixel.position);

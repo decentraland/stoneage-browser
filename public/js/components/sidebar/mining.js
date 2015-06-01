@@ -16,7 +16,7 @@ var Mining = React.createClass({
   },
   changeTargetColor: function(event) {
     var color = parseInt(event.nativeEvent.target.value.substr(1, 6), 16);
-    client.setNewColor(color);
+    client.miner.setNewColor(color);
     this.setState(this.getInitialState());
   },
   render: function() {
