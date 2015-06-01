@@ -103,8 +103,25 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('connection', function(peerID) {
     console.log('new connection', peerID);
+    networking.send(peerID, 'height', self.blockchain.getCurrentHeight());
     networking.send(peerID, 'getpeers', {});
-    networking.send(peerID, 'getblocks', self.blockchain.getBlockLocator());
+  });
+
+  networking.on('getpeers', function(peerID) {
+    networking.send(peerID, 'peers', _.keys(networking.peers));
+  });
+
+  networking.on('peers', function(peerID, peers) {
+    peers.forEach(function(peer) {
+      networking.openConnection(peer);
+    });
+  });
+
+  networking.on('height', function(peerID, height) {
+    console.log(peerID, 'height', height);
+    if (height > self.blockchain.getCurrentHeight()) {
+      networking.send(peerID, 'getblocks', self.blockchain.getBlockLocator());
+    }
   });
 
   networking.on('inv', function(peerID, inv) {
@@ -129,15 +146,6 @@ Client.prototype._setupNetworking = function() {
     });
   });
 
-  networking.on('getpeers', function(peerID) {
-    networking.send(peerID, 'peers', _.keys(networking.peers));
-  });
-
-  networking.on('peers', function(peerID, peers) {
-    peers.forEach(function(peer) {
-      networking.openConnection(peer);
-    });
-  });
 
   networking.on('getblocks', function(peerID, inv) {
     console.log('getblocks from peer', peerID, inv);
