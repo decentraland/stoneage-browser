@@ -163,7 +163,6 @@ Networking.prototype._addPeer = function(dataConnection) {
   var dc = dataConnection;
   var peerID = dc.peer;
 
-  console.log('adding peer', peerID, dc.metadata);
   this.peers[peerID] = dc;
 
   this.emit('connection', peerID);
