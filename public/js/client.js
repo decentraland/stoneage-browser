@@ -70,6 +70,8 @@ function Client() {
   this.miner.on('block', this.receiveBlock.bind(this));
 
   this.miner.startMining();
+
+  this.inventory = {};
 }
 util.inherits(Client, events.EventEmitter);
 
@@ -112,6 +114,7 @@ Client.prototype._setupNetworking = function() {
       if (block) {
         return;
       }
+      self.inventory[hash] = true;
       networking.send(peerID, 'get', inv);
     });
   });
@@ -126,21 +129,13 @@ Client.prototype._setupNetworking = function() {
     });
   });
 
-  networking.on('getpeers', function(peerID, inv) {
+  networking.on('getpeers', function(peerID) {
     networking.send(peerID, 'peers', _.keys(networking.peers));
   });
 
-  networking.on('peers', function(peerID, inv) {
-    inv.forEach(function(peer) {
-      if (!networking.peers[peer]) {
-        var dataConnection = networking.server.connect(peer, {
-          label: networking.server.id,
-          metadata: {},
-          serialization: 'binary',
-          reliable: false
-        });
-        networking._setupPeerConnection(dataConnection);
-      }
+  networking.on('peers', function(peerID, peers) {
+    peers.forEach(function(peer) {
+      networking.openConnection(peer);
     });
   });
 
@@ -167,16 +162,13 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('block', function(peerID, block) {
     console.log('block from peer', peerID, block);
-    
+
     var unserialized = Block.fromBuffer(block);
 
     if (!self.blockchain.getBlock(unserialized.prevHash)) {
-
       // No previous hash; ask it and store block to process later
       after[unserialized.prevHash] = unserialized;
-
     } else {
-
       self.receiveBlock(unserialized, peerID);
       var hash = unserialized.hash;
 
@@ -305,9 +297,9 @@ Client.prototype.getState = function() {
   var self = this;
   var pixelValues = _.values(this.blockchain.pixels);
   var focusPixel = this.focusPixel ? {
-      position: this.focusPixel,
-      lastTx: this.blockchain.pixels[Pos.posToString(this.focusPixel)]
-    } : null;
+    position: this.focusPixel,
+    lastTx: this.blockchain.pixels[Pos.posToString(this.focusPixel)]
+  } : null;
   return {
     focusPixel: focusPixel,
     pixels: pixelValues,

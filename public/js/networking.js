@@ -116,13 +116,7 @@ Networking.prototype.start = function() {
       return;
     }
     console.log('attempting to connect to', seed);
-    var dataConnection = self.server.connect(seed, {
-      label: undefined, // will be generated at random
-      metadata: self.metadata, // other peer will receive this data on connection
-      serialization: 'binary', // can be binary, binary-utf8, json, or none
-      reliable: false, // true makes connection reliable, with lower performance
-    });
-    self._setupPeerConnection(dataConnection);
+    self.openConnection(seed);
   });
 
 };
@@ -169,7 +163,7 @@ Networking.prototype._addPeer = function(dataConnection) {
   var dc = dataConnection;
   var peerID = dc.peer;
 
-  console.log('adding peer', peerID);
+  console.log('adding peer', peerID, dc.metadata);
   this.peers[peerID] = dc;
 
   this.emit('connection', peerID);
@@ -191,6 +185,18 @@ Networking.prototype.closeConnection = function(peerID) {
   $.checkArgument(this.peers[peerID], 'Attempted to close non-existent connection to ' + peerID);
   this.peers[peerID].disconnect();
   this._cleanupPeerConnection();
+};
+
+Networking.prototype.openConnection = function(peerID) {
+  if (!this.peers[peerID]) {
+    var dataConnection = this.server.connect(peerID, {
+      label: peerID,
+      metadata: this.metadata,
+      serialization: 'binary',
+      reliable: false
+    });
+    this._setupPeerConnection(dataConnection);
+  }
 };
 
 
