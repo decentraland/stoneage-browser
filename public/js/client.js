@@ -103,7 +103,6 @@ Client.prototype.loadBlockchain = function() {
   blocks.reverse();
   blocks.map(function(block) {
     this.blockchain.proposeNewBlock(block);
-    console.log(block.id, block.height, block.timestamp, block.bits.toString(16));
     self.bits = block.bits;
   }, this);
 };
@@ -256,6 +255,17 @@ Client.prototype.receiveBlock = function(block, peerID) {
   }
 
   if (result.confirmed.length) {
+
+    var amount = result.confirmed.length - result.unconfirmed.length;
+    var mine = !!self.wallet[block.transactions[0].owner];
+
+    var message = mine ? 'You now own a new pixel at position ' + block.transactions[0].position.x + ', ' + block.transactions[0].position.y + '!' : amount === 1 ? 'New pixel created!' : amount + ' new pixels!'
+
+    jQuery.notify({
+      message: message
+    }, {
+      showProgressbar: false
+    });
 
     // Remove old transactions
     result.confirmed.forEach(function(newBlock) {
