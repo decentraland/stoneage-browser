@@ -26,7 +26,7 @@ var Pixel = React.createClass({
     color = '#' + color;
     var controlled = !!client.wallet[client.blockchain.pixels[posStr].owner.toString()] ?
       'controlled' : '';
-    var classString = "pixel " + {controlled};
+    var classString = "pixel " + controlled;
     return (
       <a
         id={id}
