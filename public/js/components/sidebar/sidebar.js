@@ -16,6 +16,43 @@ var Toggle = require('react-toggle');
 var client = require('../../client');
 var content = $('#content');
 
+var cummulativeZoom = 1;
+var offsetX = 0;
+var offsetY = 0;
+var zoom = function(factor) {
+  var canvas = $('#canvas');
+  var win = $(window);
+  var originalWidth = win.width();
+  var originalHeight = win.height();
+  var targetWidth = originalWidth * factor;
+  var targetHeight = originalHeight * factor;
+
+  var extraX = (targetWidth - originalWidth) / 2;
+  var extraY = (targetHeight - originalHeight) / 2;
+
+  cummulativeZoom *= factor;
+  offsetX -= extraX;
+  offsetY -= extraY;
+
+  updateView(canvas);
+};
+var updateView = function(canvas) {
+  canvas.css({transform: 'scale(' + cummulativeZoom + ') ' + 
+                         'translate(' + offsetX +'px, ' + offsetY + 'px)'});
+};
+var updatePanTemp = function(dx, dy) {
+  var canvas = $('#canvas');
+  canvas.css({transform: 'scale(' + cummulativeZoom + ') ' + 
+                         'translate(' + (offsetX + dx / cummulativeZoom) +'px, '
+                                      + (offsetY + dy / cummulativeZoom) + 'px)'});
+};
+var updatePan = function(dx, dy) {
+  offsetX += dx / cummulativeZoom;
+  offsetY += dy / cummulativeZoom;
+
+  updateView($('#canvas'));
+};
+
 var Sidebar = React.createClass({
   getInitialState: function() {
     return {
@@ -30,6 +67,35 @@ var Sidebar = React.createClass({
   changeColor: function(event) {
     var color = parseInt(event.nativeEvent.target.value.substr(1, 6), 16);
     this.setState({ color: color });
+  },
+  zoomIn: function() {
+    zoom(1.25);
+  },
+  zoomOut: function() {
+    zoom(0.75);
+  },
+  componentDidMount: function() {
+    var node = React.findDOMNode(this);
+    var isDragging = false;
+    var firstPosition;
+    var canvas = $('#canvas');
+    var win = $(window);
+    win
+      .mousedown(function(ev) {
+        firstPosition = ev;
+        $(window).mousemove(function(newEv) {
+          updatePanTemp(newEv.clientX - ev.clientX, newEv.clientY - ev.clientY);
+          isDragging = true;
+        });
+      })
+      .mouseup(function(newEv) {
+        var wasDragging = isDragging;
+        isDragging = false;
+        $(window).unbind("mousemove");
+        if (wasDragging) {
+          updatePan(newEv.clientX - firstPosition.clientX, newEv.clientY - firstPosition.clientY);
+        }
+      });
   },
   render: function() {
     // <LatestBlocks blocks={this.props.client.latestBlocks} />
@@ -48,8 +114,18 @@ var Sidebar = React.createClass({
 
     return (
       <div className="left-sidebar container">
-        <div className="sidebar-title sidebar">
-          <h3>Decentraland</h3>
+        <div className="sidebar-title sidebar row">
+          <div className="col-md-6">
+            <h3>Decentraland</h3>
+          </div>
+          <div className="col-md-6 btn-group" role="group">
+            <a onClick={this.zoomIn} className="btn">
+              <span className="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>
+            </a>
+            <a onClick={this.zoomOut} className="btn">
+              <span className="glyphicon glyphicon-zoom-out" aria-hidden="true"></span>
+            </a>
+          </div>
         </div>
         <div className="status-bar sidebar">
           <Mining />

@@ -60,6 +60,7 @@ body {
 }
 .drawmode .pixel.controlled {
   display: block;
+  visibility: visible;
   position: absolute;
   width: 10px;
   height: 10px;
