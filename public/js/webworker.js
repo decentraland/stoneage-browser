@@ -68,7 +68,7 @@ onmessage = function(e) {
     $.checkArgument(!_.isUndefined(opts.color), 'opts.color must not be undefined');
     $.checkArgument(!_.isUndefined(opts.previous), 'opts.previous must not be undefined');
     $.checkArgument(!_.isUndefined(opts.bits), 'opts.bits must not be undefined');
-    console.log('mining at difficulty bits', opts.bits.toString(16));
+    //console.log('mining at difficulty bits', opts.bits.toString(16));
 
     opts.publicKey = new PublicKey(opts.publicKey);
     $.checkArgument(

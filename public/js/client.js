@@ -283,6 +283,7 @@ Client.prototype.recomputeDifficulty = function() {
   var delta = Math.abs(first.timestamp - last.timestamp);
   var average = delta / RETARGET_PERIOD;
   console.log('\taverage block time', average, 'secs');
+  console.log('\texpected block time', DESIRED_BLOCK_TIME, 'secs');
 
   var currentTarget = last.header.getTargetDifficulty();
   var newTarget = currentTarget
