@@ -243,8 +243,14 @@ Client.prototype.receiveBlock = function(block, peerID) {
   try {
     result = this.blockchain.proposeNewBlock(block);
   } catch (e) {
-    console.log('Invalid block', block.id, 'from peer', peerID, e);
     //this.networking.closeConnection(peerID);
+    console.log('Invalid block', block.id, 'from peer', peerID, e);
+    if (_.isUndefined(peerID)) {
+      // if it's our own block, retarget
+      console.log('my own block was invalid!');
+      this.retarget(true);
+      this.miner.startMining();
+    }
     return;
   }
   localStorage.setItem('tip', this.blockchain.tip);
@@ -322,11 +328,15 @@ Client.prototype.recomputeDifficulty = function() {
   this.miner.bits = bits;
 };
 
-Client.prototype.retarget = function() {
+Client.prototype.retarget = function(restart) {
 
-  var lookup = [this.miner.target];
+  var target = this.miner.target;
+  if (restart) {
+    target = {x:0, y:0};
+  }
+  var lookup = [target];
   var seen = {};
-  seen[Pos.posToString(this.miner.target)] = true;
+  seen[Pos.posToString(target)] = true;
   var begin = 0;
   var end = 1;
   while (begin < end) {

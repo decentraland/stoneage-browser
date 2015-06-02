@@ -57,6 +57,11 @@ module.exports = {
     seeds: [
       'seed-livenet-maraoz',
       'seed-livenet-eordano',
+      'seed-livenet-esneider',
+      'seed-livenet-marianorod',
+      'seed-livenet-yemel',
+      'seed-livenet-voltaire',
+      'seed-livenet-paraoz',
     ],
   },
 };
