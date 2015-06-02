@@ -19,8 +19,9 @@ var content = $('#content');
 var cummulativeZoom = 1;
 var offsetX = 0;
 var offsetY = 0;
+var canvas;
+
 var zoom = function(factor) {
-  var canvas = $('#canvas');
   var win = $(window);
   var originalWidth = win.width();
   var originalHeight = win.height();
@@ -34,14 +35,13 @@ var zoom = function(factor) {
   offsetX -= extraX;
   offsetY -= extraY;
 
-  updateView(canvas);
+  updateView();
 };
-var updateView = function(canvas) {
+var updateView = function() {
   canvas.css({transform: 'scale(' + cummulativeZoom + ') ' + 
                          'translate(' + offsetX +'px, ' + offsetY + 'px)'});
 };
 var updatePanTemp = function(dx, dy) {
-  var canvas = $('#canvas');
   canvas.css({transform: 'scale(' + cummulativeZoom + ') ' + 
                          'translate(' + (offsetX + dx / cummulativeZoom) +'px, '
                                       + (offsetY + dy / cummulativeZoom) + 'px)'});
@@ -50,22 +50,24 @@ var updatePan = function(dx, dy) {
   offsetX += dx / cummulativeZoom;
   offsetY += dy / cummulativeZoom;
 
-  updateView($('#canvas'));
+  updateView();
 };
 
 var Sidebar = React.createClass({
   getInitialState: function() {
     return {
-      draw: false,
-      color: 0xFF0000
+      draw: client.draw,
+      color: client.drawColor
     }
   },
   switchDraw: function() {
     content.toggleClass('drawmode');
+    client.setDraw(!this.state.draw);
     this.setState({ draw: !this.state.draw });
   },
   changeColor: function(event) {
     var color = parseInt(event.nativeEvent.target.value.substr(1, 6), 16);
+    client.setDrawColor(color);
     this.setState({ color: color });
   },
   zoomIn: function() {
@@ -78,8 +80,9 @@ var Sidebar = React.createClass({
     var node = React.findDOMNode(this);
     var isDragging = false;
     var firstPosition;
-    var canvas = $('#canvas');
     var win = $(window);
+
+    canvas = $('#canvas');
     win
       .mousedown(function(ev) {
         firstPosition = ev;
@@ -96,6 +99,11 @@ var Sidebar = React.createClass({
           updatePan(newEv.clientX - firstPosition.clientX, newEv.clientY - firstPosition.clientY);
         }
       });
+
+    client.on('update', function() {
+      // Show tip for last block
+      // Show tip for mining target
+    });
   },
   render: function() {
     // <LatestBlocks blocks={this.props.client.latestBlocks} />

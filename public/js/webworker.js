@@ -40,9 +40,11 @@ var nextBlock = function() {
 };
 
 var addTx = function(tx) {
-  pause();
-  miner.addTransaction(tx);
-  resume();
+  if (miner) {
+    pause();
+    miner.addTransaction(tx);
+    resume();
+  }
 };
 
 var pause = function() {

@@ -10,7 +10,11 @@ var Pos = require('../position');
 
 var Pixel = React.createClass({
   click: function() {
-    client.setFocusPixel(this.props.pixel.position);
+    if (client.draw) {
+      client.makeTransaction(this.props.pixel.position, client.drawColor);
+    } else {
+      client.setFocusPixel(this.props.pixel.position);
+    }
   },
   render: function() {
     var pixel = this.props.pixel;
@@ -37,27 +41,6 @@ var Pixel = React.createClass({
         role="button"
       ></a>
     );
-    /*
-    return (
-      <OverlayTrigger trigger='focus' placement='top' overlay={
-        <Popover html="true">
-          <h3>({posHuman})</h3>
-          <ul>
-            <li>Owner: {pixel.lastTx.owner}</li>
-            <li>Color: {pixel.lastTx.color}</li>
-            <li>Last change: {pixel.lastTx.timestamp}</li>
-          </ul>
-        </Popover>}>
-        <a
-          id={id}
-          className="pixel"
-          style={{left: left + 'px', top: top + 'px', backgroundColor: color}}
-          tabIndex="0"
-          role="button"
-        ></a>
-      </OverlayTrigger>
-    );
-    */
   }
 });
 
