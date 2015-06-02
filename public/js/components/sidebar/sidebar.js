@@ -142,7 +142,7 @@ var Sidebar = React.createClass({
               Pixels you control
             </div>
             <div className="col-md-6">
-              20
+              {this.props.client.controlled.length}
             </div>
           </div>
           <div className="row">
