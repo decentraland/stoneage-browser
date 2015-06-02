@@ -16,6 +16,9 @@ var $ = core.util.preconditions;
 var LocalStorageTxStore = require('./store/transaction');
 var LocalStorageBlockStore = require('./store/block');
 
+var RETARGET_PERIOD = 100;
+var MAX_TIME_DELTA = 1*(60*60); // 1 hour
+
 function Client() {
   events.EventEmitter.call(this);
   var self = this;
@@ -218,6 +221,13 @@ Client.prototype.receiveBlock = function(block, peerID) {
     return;
   }
 
+  var now = new Date().getTime() / 1000;
+  var delta = Math.abs(block.timestamp - now);
+  if (delta > MAX_TIME_DELTA) {
+    console.log('rejected block due to timestamp delta', delta);
+    return;
+  }
+
   try {
     result = this.blockchain.proposeNewBlock(block);
   } catch (e) {
@@ -226,7 +236,7 @@ Client.prototype.receiveBlock = function(block, peerID) {
     return;
   }
   localStorage.setItem('tip', this.blockchain.tip);
-  if (block.height % 512 === 0) {
+  if (block.height % RETARGET_PERIOD === 0) {
     // TODO: retarget
     console.log('retarget');
   }

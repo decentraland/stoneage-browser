@@ -4805,6 +4805,9 @@ var PublicKey = function PublicKey(data, extra) {
     point: info.point,
     network: info.network || Network.defaultNetwork
   });
+  JSUtil.defineImmutable(this, {
+    _str: this.toDER().toString('hex')
+  });
 
   return this;
 };
@@ -5114,7 +5117,7 @@ PublicKey.prototype._getID = function _getID() {
  * @returns {string} A DER hex encoded string
  */
 PublicKey.prototype.toString = function() {
-  return this.toDER().toString('hex');
+  return this._str;
 };
 
 /**
@@ -5525,7 +5528,7 @@ Transaction.prototype.colored = function(color) {
   if (_.isString(color)) {
     color = parseInt(color);
   }
-  $.checkArgument(color, 'color is required');
+  $.checkArgument(!_.isUndefined(color), 'color is required');
   $.checkArgument(0 <= color && color <= 0xffffffff, 'color needs to be between 0 and 0xffffffff (0xrrggbbaa)');
   this.color = color;
   return this;
