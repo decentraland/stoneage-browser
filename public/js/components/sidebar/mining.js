@@ -3,6 +3,8 @@
 var React = require('react');
 var client = require('../../client');
 
+var Toggle = require('react-toggle');
+
 var Mining = React.createClass({
   getInitialState: function() {
     return {
@@ -20,42 +22,57 @@ var Mining = React.createClass({
     this.setState(this.getInitialState());
   },
   render: function() {
-    var buttonText = this.state.mining ? 'Mining Enabled' : 'Mining Disabled';
-    var buttonClass = 'btn btn-sm ' + (this.state.mining ? 'btn-success' : 'btn-warning');
-    var bits = '0x' + client.miner.bits.toString(16);
+    var checked = !!this.state.mining;
     var color = this.state.color.toString(16);
-    var publicKey = client.miner.publicKey.toString();
-    publicKey = publicKey.substr(0, 6) + '...' + publicKey.substr(publicKey.length - 4, 4);
     while (color.length < 6) {
       color = '0' + color;
     }
     color = '#' + color;
     return (
-      <div>
-        <h2>Status</h2>
-        <ul>
-          <li>
-            <button
-              onClick={this.switchMining}
-              className={buttonClass}
-            >
-              {buttonText}
-            </button>
-          </li>
-          <li><strong>Mining Target</strong>: {client.miner.target.x}, {client.miner.target.y}</li>
-          <li><strong>Current Difficulty</strong>: {bits}</li>
-          <li>
-            <strong>Target Color</strong>:
+      <div className="section">
+        <div className="row">
+          <div className="col-md-6 leftcol">
+            Mining
+          </div>
+          <div className="col-md-6">
+            <Toggle
+              defaultChecked={checked}
+              onChange={this.switchMining}
+            />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-6 leftcol">
+            Mining Color
+          </div>
+          <div className="col-md-6">
             <input
               type="color"
               value={color}
               onChange={this.changeTargetColor}
             />
-          </li>
-          <li><strong>Public Key</strong>: {publicKey}</li> 
-        </ul>
+          </div>
+        </div>
       </div>
     );
+    /*
+          <div className="row">
+            <div className="col-md-6 leftcol">
+              Time Between Pixels
+            </div>
+            <div className="col-md-6">
+              10 seconds
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6 leftcol">
+              Your productivity
+            </div>
+            <div className="col-md-6">
+              2 minutes per pixel
+            </div>
+          </div>
+          */
   }
 });
 

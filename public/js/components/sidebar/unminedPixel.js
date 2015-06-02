@@ -12,13 +12,13 @@ var UnminedPixel = React.createClass({
     return (
       <div id="focusPixel">
         <h3>Pixel: {this.props.pixel.position.x}, {this.props.pixel.position.y}</h3>
-        <ul>
-          <li>
-            <button className="btn btn-success" onClick={this.click}>
-              Set as target
-            </button>
-          </li>
-        </ul>
+        <div className="row change">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={this.click}
+          >Set Target</button>
+        </div>
       </div>
     );
   }

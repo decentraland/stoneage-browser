@@ -60,6 +60,8 @@ function Client() {
 
   this.txPool = [];
   this.focusPixel = null;
+  this.draw = false;
+  this.drawColor = 0xFF0000;
 
   this.miner = new Miner({
     client: this,
@@ -344,6 +346,14 @@ Client.prototype.makeTransaction = function(position, color) {
 
 Client.prototype.switchMining = function() {
   this.miner.switchMining();
+};
+
+Client.prototype.setDraw = function(draw) {
+  this.draw = draw;
+};
+
+Client.prototype.setDrawColor = function(color) {
+  this.drawColor = color;
 };
 
 Client.prototype.addTransaction = function(tx) {

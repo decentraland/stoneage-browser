@@ -12,9 +12,14 @@ var Canvas = React.createClass({
     var unmined = [];
     var pixels = [];
     var self = this;
+    var lastTxMap = {};
+    this.props.client.txPool.map(function(tx) {
+      lastTxMap[Pos.posToString(tx.position)] = tx;
+    });
     this.props.pixels.forEach(function(pixel) {
       var posStr = Pos.posToString(pixel.position);
       used[posStr] = true;
+      pixel = lastTxMap[posStr] || pixel;
       posStr = 'pixel_' + posStr;
       pixels.push(
         <Pixel key={posStr} pixel={pixel} />
