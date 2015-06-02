@@ -12,8 +12,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "decentraland-core": "0.0.2",
     "bootstrap": "^3.3.4",
+    "bootstrap-notify": "^3.0.0",
+    "decentraland-core": "0.0.2",
     "express": "^4.12.4",
     "express-jsxtransform": "^3.0.0",
     "express-ws": "^0.2.6",
