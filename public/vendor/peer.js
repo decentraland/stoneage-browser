@@ -2564,10 +2564,6 @@ Socket.prototype._startWebSocket = function(id) {
   this._socket.onopen = function() {
     if (self._timeout) {
       clearTimeout(self._timeout);
-      setTimeout(function(){
-        self._http.abort();
-        self._http = null;
-      }, 500000);
     }
     self._sendQueuedMessages();
     util.log('Socket open');

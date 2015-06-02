@@ -484,7 +484,7 @@ BlockHeader.create = function(data) {
     height: data.height,
     time: data.time,
     timestamp: data.time,
-    bits: data.bits, 
+    bits: data.bits,
     prevHash: data.prevHash,
     merkleRoot: data.merkleRoot,
     nonce: data.nonce
@@ -591,11 +591,17 @@ BlockHeader.getTargetDifficulty = function(bits) {
 
 };
 
-BlockHeader.getBits = function(difficulty) {
-  $.checkArgument(difficulty instanceof BN, 'difficulty must be a BN');
- 
-  // TODO 
+BlockHeader.getBits = function(target) {
+  $.checkArgument(target instanceof BN, 'target must be a BN');
 
+  var s = target.toString(16);
+  if (s.length % 2 !== 0) {
+    s = '0' + s;
+  }
+  var exp = (s.length / 2).toString(16);
+  var mantissa = s.substring(0, 6);
+  var bits = parseInt(exp + mantissa, 16);
+  return bits;
 };
 
 /**
@@ -656,7 +662,7 @@ BlockHeader.prototype.inspect = function inspect() {
 
 BlockHeader.Constants = {
   CURRENT_VERSION: 1,
-  DEFAULT_BITS: 0x207fffff,
+  DEFAULT_BITS: 0x207fffff, // target 7fffff0000000000000000000000000000000000000000000000000000000000
   START_OF_HEADER: 8, // Start buffer position in raw block data
   MAX_TIME_OFFSET: 2 * 60 * 60, // The max a timestamp can be in the future
   LARGEST_HASH: new BN('10000000000000000000000000000000000000000000000000000000000000000', 'hex')
@@ -4805,6 +4811,9 @@ var PublicKey = function PublicKey(data, extra) {
     point: info.point,
     network: info.network || Network.defaultNetwork
   });
+  JSUtil.defineImmutable(this, {
+    _str: this.toDER().toString('hex')
+  });
 
   return this;
 };
@@ -5114,7 +5123,7 @@ PublicKey.prototype._getID = function _getID() {
  * @returns {string} A DER hex encoded string
  */
 PublicKey.prototype.toString = function() {
-  return this.toDER().toString('hex');
+  return this._str;
 };
 
 /**
@@ -5525,7 +5534,7 @@ Transaction.prototype.colored = function(color) {
   if (_.isString(color)) {
     color = parseInt(color);
   }
-  $.checkArgument(color, 'color is required');
+  $.checkArgument(!_.isUndefined(color), 'color is required');
   $.checkArgument(0 <= color && color <= 0xffffffff, 'color needs to be between 0 and 0xffffffff (0xrrggbbaa)');
   this.color = color;
   return this;

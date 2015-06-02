@@ -1,4 +1,6 @@
-window = {};
+'use strict';
+
+var window = {};
 window.Object = Object;
 window.String = String;
 window.RegExp = RegExp;
@@ -19,28 +21,12 @@ var Transaction = core.Transaction;
 var Block = core.Block;
 var Miner = core.Miner;
 
-var neighbors = function(pos) {
-  return [
-    {x: pos.x -1, y: pos.y},
-    {x: pos.x +1, y: pos.y},
-    {x: pos.x, y: pos.y - 1},
-    {x: pos.x, y: pos.y + 1}
-  ];
-};
-
-var posToString = function(pos) {
-  return pos.x + '_' + pos.y;
-};
-
 var miner;
 
 // Worker control
 var minerTimeout = 0;
 
 var mine = function(opts) {
-  opts.time = Math.round(new Date() / 1000);
-  opts.nonce = 0;
-
   miner.on('block', function(block) {
     postMessage(block.toString());
   });
@@ -82,19 +68,19 @@ onmessage = function(e) {
     $.checkArgument(!_.isUndefined(opts.color), 'opts.color must not be undefined');
     $.checkArgument(!_.isUndefined(opts.previous), 'opts.previous must not be undefined');
     $.checkArgument(!_.isUndefined(opts.bits), 'opts.bits must not be undefined');
+    //console.log('mining at difficulty bits', opts.bits.toString(16));
 
     opts.publicKey = new PublicKey(opts.publicKey);
     $.checkArgument(
-      opts.color >= 0 && opts.color < 0xFFFFFF, 'Invalid color, must be an int from 0x0 to 0xFFFFFF'
+      opts.color >= 0 && opts.color <= 0xFFFFFF, 'Invalid color, must be an int from 0x0 to 0xFFFFFF'
     );
     opts.coinbase = new Transaction()
       .at(opts.target.x, opts.target.y)
       .to(opts.publicKey)
       .colored(opts.color);
     opts.previous = Block.fromString(opts.previous);
-    opts.time = Math.round(new Date().getTime() / 1000);
 
-    miner = new Miner(opts)
+    miner = new Miner(opts);
     opts.txPool.map(function(tx) {
       return miner.addTransaction(new Transaction(tx));
     });
@@ -111,4 +97,4 @@ onmessage = function(e) {
   } else {
     throw new Error('invalid message type');
   }
-}
+};

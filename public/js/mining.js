@@ -5,9 +5,12 @@ var $ = core.util.preconditions;
 var _ = core.deps._;
 var events = require('events');
 var Block = core.Block;
+var BlockHeader = core.BlockHeader;
 
 var util = require('util');
 var inherits = util.inherits;
+
+var STARTING_BITS = BlockHeader.Constants.DEFAULT_BITS; // 0x1fefffff;
 
 function Mining(opts) {
   $.checkArgument(_.isObject(opts));
@@ -23,7 +26,7 @@ function Mining(opts) {
     console.log('error', arguments);
   };
 
-  this.bits = opts.bits || 0x1fefffff;
+  this.bits = opts.bits || STARTING_BITS;
   this.client = opts.client;
   this.publicKey = opts.publicKey;
   this.target = opts.target;
@@ -40,7 +43,6 @@ Mining.prototype.startMining = function() {
     return;
   }
 
-  var self = this;
   var opts = {};
   opts.bits = this.bits;
   opts.color = this.color;
@@ -49,7 +51,7 @@ Mining.prototype.startMining = function() {
   opts.previous = this.client.blockchain.getTipBlock().toString();
   opts.txPool = this.client.txPool.map(function(tx) {
     return tx.toString();
-  });;
+  });
 
   this.mining = true;
   this.worker.postMessage({
