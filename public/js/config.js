@@ -10,8 +10,8 @@ module.exports = {
     //id: 'seed-livenet-eordano',
     server: {
       //debug: 3,
-      //host: 'localhost',
-      //port: 9000,
+      host: 'localhost',
+      port: 9000,
       key: 'igd9tuakix0w9udi',
       'iceServers': [{
         url: 'stun:stun.l.google.com:19302'

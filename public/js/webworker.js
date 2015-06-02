@@ -68,10 +68,11 @@ onmessage = function(e) {
     $.checkArgument(!_.isUndefined(opts.color), 'opts.color must not be undefined');
     $.checkArgument(!_.isUndefined(opts.previous), 'opts.previous must not be undefined');
     $.checkArgument(!_.isUndefined(opts.bits), 'opts.bits must not be undefined');
+    console.log('mining at difficulty bits', opts.bits.toString(16));
 
     opts.publicKey = new PublicKey(opts.publicKey);
     $.checkArgument(
-      opts.color >= 0 && opts.color < 0xFFFFFF, 'Invalid color, must be an int from 0x0 to 0xFFFFFF'
+      opts.color >= 0 && opts.color <= 0xFFFFFF, 'Invalid color, must be an int from 0x0 to 0xFFFFFF'
     );
     opts.coinbase = new Transaction()
       .at(opts.target.x, opts.target.y)

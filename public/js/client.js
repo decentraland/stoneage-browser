@@ -4,7 +4,9 @@ var util = require('util');
 var events = require('events');
 
 var core = require('decentraland-core');
+var BN = core.crypto.BN;
 var Block = core.Block;
+var BlockHeader = core.BlockHeader;
 var Blockchain = core.Blockchain;
 var Miner = require('./mining');
 var Networking = require('./networking');
@@ -16,8 +18,11 @@ var $ = core.util.preconditions;
 var LocalStorageTxStore = require('./store/transaction');
 var LocalStorageBlockStore = require('./store/block');
 
-var RETARGET_PERIOD = 100;
-var MAX_TIME_DELTA = 1*(60*60); // 1 hour
+var RETARGET_PERIOD = 50;
+var DESIRED_BLOCK_TIME = 1 / 10 * 60; // 2 minutes
+var DESIRED_RETARGET_TIME = DESIRED_BLOCK_TIME * RETARGET_PERIOD;
+var MAX_TIME_DELTA = 1 * (60 * 60); // 1 hour
+var MAX_BLOCKS_IN_INV = 50;
 
 function Client() {
   events.EventEmitter.call(this);
@@ -29,8 +34,8 @@ function Client() {
   this.loadBlockchain();
 
   var wallet = localStorage.getItem('privateKeys');
+  this.wallet = {};
   if (!wallet) {
-    this.wallet = {};
     var privateKey = new core.PrivateKey();
     this.wallet[privateKey.publicKey.toString()] = privateKey;
     this.keys = [privateKey.publicKey];
@@ -40,17 +45,16 @@ function Client() {
       })
     ));
   } else {
-    this.wallet = {};
     this.keys = [];
     var privateKeys = JSON.parse(wallet);
     privateKeys.forEach(function(privateKey) {
-      var privateKey = new core.PrivateKey(privateKey);
+      privateKey = new core.PrivateKey(privateKey);
       self.wallet[privateKey.publicKey.toString()] = privateKey;
       self.keys.push(privateKey.publicKey.toString());
     });
   }
 
-  //allow setting peer id from url
+  //allows setting peer id from url
   config.networking.id = window.location.hash.substring(1) || config.networking.id;
   this._setupNetworking();
 
@@ -67,7 +71,8 @@ function Client() {
     color: 0xff0000,
     txPool: this.txPool,
     callback: this.receiveBlock.bind(this),
-    enableMining: false
+    enableMining: false,
+    bits: this.bits,
   });
   this.retarget();
   this.miner.on('block', this.receiveBlock.bind(this));
@@ -79,6 +84,7 @@ function Client() {
 util.inherits(Client, events.EventEmitter);
 
 Client.prototype.loadBlockchain = function() {
+  var self = this;
   var tip = localStorage.getItem('tip');
 
   if (!tip) {
@@ -95,6 +101,8 @@ Client.prototype.loadBlockchain = function() {
   blocks.reverse();
   blocks.map(function(block) {
     this.blockchain.proposeNewBlock(block);
+    console.log(block.id, block.height, block.timestamp, block.bits.toString(16));
+    self.bits = block.bits;
   }, this);
 };
 
@@ -128,7 +136,7 @@ Client.prototype._setupNetworking = function() {
   });
 
   networking.on('inv', function(peerID, inv) {
-    console.log('inv from peer', peerID, inv);
+    //console.log('inv from peer', peerID, inv);
     var unknown = [];
     inv.forEach(function(hash) {
       var block = self.blockchain.getBlock(hash);
@@ -144,7 +152,7 @@ Client.prototype._setupNetworking = function() {
   });
 
   networking.on('getdata', function(peerID, inv) {
-    console.log('getdata from peer', peerID, inv);
+    //console.log('getdata from peer', peerID, inv);
     inv.forEach(function(blockhash) {
       var block = self.blockchain.getBlock(blockhash);
       if (block) {
@@ -154,7 +162,7 @@ Client.prototype._setupNetworking = function() {
   });
 
   networking.on('getblocks', function(peerID, locator) {
-    console.log('getblocks from peer', peerID, locator);
+    //console.log('getblocks from peer', peerID, locator);
     var i = 0;
     var first = Block.genesis.hash;
     while (i < locator.length) {
@@ -167,7 +175,7 @@ Client.prototype._setupNetworking = function() {
     first = self.blockchain.next[first];
     var blocks = [first];
     var current = first;
-    while (blocks.length < 50 && self.blockchain.next[current]) {
+    while (blocks.length < MAX_BLOCKS_IN_INV && self.blockchain.next[current]) {
       current = self.blockchain.next[current];
       blocks.push(current);
     }
@@ -179,7 +187,7 @@ Client.prototype._setupNetworking = function() {
     var unserialized = Block.fromBuffer(block);
     var hash = unserialized.hash;
 
-    console.log('block from peer', peerID, hash);
+    //console.log('block from peer', peerID, hash);
     delete self.inventory[hash];
 
     if (!self.blockchain.getBlock(unserialized.prevHash)) {
@@ -200,7 +208,7 @@ Client.prototype._setupNetworking = function() {
     }
     if (_.keys(self.inventory).length === 0) {
       var locator = self.blockchain.getBlockLocator();
-      console.log('locator', locator);
+      console.log('requesting blocks with locator of size', locator.length);
       networking.send(peerID, 'getblocks', locator);
     }
 
@@ -236,9 +244,10 @@ Client.prototype.receiveBlock = function(block, peerID) {
     return;
   }
   localStorage.setItem('tip', this.blockchain.tip);
-  if (block.height % RETARGET_PERIOD === 0) {
-    // TODO: retarget
-    console.log('retarget');
+  console.log('new tip', block.id, block.height);
+
+  if (block.height > 1 && (block.height - 1) % RETARGET_PERIOD === 0) {
+    this.recomputeDifficulty();
   }
 
   if (result.confirmed.length) {
@@ -264,6 +273,28 @@ Client.prototype.receiveBlock = function(block, peerID) {
     this.retarget();
     this.miner.startMining();
   }
+};
+
+Client.prototype.recomputeDifficulty = function() {
+  console.log('difficulty retarget triggered...');
+  var maxHeight = this.blockchain.getCurrentHeight();
+  var first = this.blockchain.getBlock(this.blockchain.hashByHeight[maxHeight - RETARGET_PERIOD]);
+  var last = this.blockchain.getBlock(this.blockchain.tip);
+  var delta = Math.abs(first.timestamp - last.timestamp);
+  var average = delta / RETARGET_PERIOD;
+  console.log('\taverage block time', average, 'secs');
+
+  var currentTarget = last.header.getTargetDifficulty();
+  var newTarget = currentTarget
+    .div(new BN(DESIRED_RETARGET_TIME))
+    .mul(new BN(delta));
+
+  console.log('\tcurrent target', currentTarget.toBuffer().toString('hex'));
+  console.log('\tnew target    ', newTarget.toBuffer().toString('hex'));
+
+  var bits = BlockHeader.getBits(newTarget);
+  this.bits = bits;
+  this.miner.bits = bits;
 };
 
 Client.prototype.retarget = function() {

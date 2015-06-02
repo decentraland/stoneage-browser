@@ -40,7 +40,6 @@ Mining.prototype.startMining = function() {
     return;
   }
 
-  var self = this;
   var opts = {};
   opts.bits = this.bits;
   opts.color = this.color;
@@ -49,7 +48,7 @@ Mining.prototype.startMining = function() {
   opts.previous = this.client.blockchain.getTipBlock().toString();
   opts.txPool = this.client.txPool.map(function(tx) {
     return tx.toString();
-  });;
+  });
 
   this.mining = true;
   this.worker.postMessage({
