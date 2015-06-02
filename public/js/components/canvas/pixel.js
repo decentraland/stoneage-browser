@@ -24,10 +24,13 @@ var Pixel = React.createClass({
       color = '0' + color;
     }
     color = '#' + color;
+    var controlled = !!client.wallet[client.blockchain.pixels[posStr].owner.toString()] ?
+      'controlled' : '';
+    var classString = "pixel " + {controlled};
     return (
       <a
         id={id}
-        className="pixel"
+        className={classString}
         style={{left: left + 'px', top: top + 'px', backgroundColor: color}}
         onClick={this.click}
         tabIndex="0"
