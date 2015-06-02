@@ -275,6 +275,15 @@ Client.prototype.receiveBlock = function(block, peerID) {
   }
 };
 
+var bn2s = function(bn) {
+
+  var s = bn.toBuffer().toString('hex');
+  while (s.length < 64) {
+    s = '0' + s;
+  }
+  return s;
+};
+
 Client.prototype.recomputeDifficulty = function() {
   console.log('difficulty retarget triggered...');
   var maxHeight = this.blockchain.getCurrentHeight();
@@ -290,8 +299,8 @@ Client.prototype.recomputeDifficulty = function() {
     .div(new BN(DESIRED_RETARGET_TIME))
     .mul(new BN(delta));
 
-  console.log('\tcurrent target', currentTarget.toBuffer().toString('hex'));
-  console.log('\tnew target    ', newTarget.toBuffer().toString('hex'));
+  console.log('\tcurrent target', bn2s(currentTarget));
+  console.log('\tnew target    ', bn2s(newTarget));
 
   var bits = BlockHeader.getBits(newTarget);
   this.bits = bits;
