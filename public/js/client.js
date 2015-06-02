@@ -121,7 +121,10 @@ Client.prototype._setupNetworking = function() {
   });
 
   networking.on('getpeers', function(peerID) {
-    networking.send(peerID, 'peers', _.keys(networking.peers));
+    networking.send(peerID, 'peers', _.shuffle(_.keys(networking.peers)).splice(8));
+    if (_.size(networking.peers) > 8) {
+      networking.closeConnection(peerID);
+    }
   });
 
   networking.on('peers', function(peerID, peers) {
