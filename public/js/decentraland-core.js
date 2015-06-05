@@ -5965,7 +5965,7 @@ module.exports = {
  * 
  */
 /**
- * bluebird build version 2.9.27
+ * bluebird build version 2.9.26
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, cancel, using, filter, any, each, timers
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -9800,16 +9800,23 @@ Promise.reduce = function (promises, fn, initialValue, _each) {
 },{"./async.js":2,"./util.js":38}],31:[function(_dereq_,module,exports){
 "use strict";
 var schedule;
-var util = _dereq_("./util");
 var noAsyncScheduler = function() {
     throw new Error("No async scheduler available\u000a\u000a    See http://goo.gl/m3OTXk\u000a");
 };
-if (util.isNode && typeof MutationObserver === "undefined") {
-    var GlobalSetImmediate = global.setImmediate;
-    var ProcessNextTick = process.nextTick;
-    schedule = util.isRecentNode
-                ? function(fn) { GlobalSetImmediate.call(global, fn); }
-                : function(fn) { ProcessNextTick.call(process, fn); };
+if (_dereq_("./util.js").isNode) {
+    var version = process.versions.node.split(".").map(Number);
+    schedule = (version[0] === 0 && version[1] > 10) || (version[0] > 0)
+        ? function(fn) { global.setImmediate(fn); } : process.nextTick;
+
+    if (!schedule) {
+        if (typeof setImmediate !== "undefined") {
+            schedule = setImmediate;
+        } else if (typeof setTimeout !== "undefined") {
+            schedule = setTimeout;
+        } else {
+            schedule = noAsyncScheduler;
+        }
+    }
 } else if (typeof MutationObserver !== "undefined") {
     schedule = function(fn) {
         var div = document.createElement("div");
@@ -9831,7 +9838,7 @@ if (util.isNode && typeof MutationObserver === "undefined") {
 }
 module.exports = schedule;
 
-},{"./util":38}],32:[function(_dereq_,module,exports){
+},{"./util.js":38}],32:[function(_dereq_,module,exports){
 "use strict";
 module.exports =
     function(Promise, PromiseArray) {
@@ -10730,10 +10737,6 @@ var ret = {
     isNode: typeof process !== "undefined" &&
         classString(process).toLowerCase() === "[object process]"
 };
-ret.isRecentNode = ret.isNode && (function() {
-    var version = process.versions.node.split(".").map(Number);
-    return (version[0] === 0 && version[1] > 10) || (version[0] > 0);
-})();
 try {throw new Error(); } catch (e) {ret.lastLineError = e;}
 module.exports = ret;
 
@@ -16854,7 +16857,7 @@ module.exports={
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:indutny/elliptic"
+    "url": "git+ssh://git@github.com/indutny/elliptic.git"
   },
   "keywords": [
     "EC",
@@ -25651,13 +25654,10 @@ module.exports.WordArray = X64WordArray
 },{"./word-array":63}],65:[function(require,module,exports){
 module.exports={
   "name": "decentraland-core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Blockchain-based decentralized land implementation in JavaScript",
   "main": "index.js",
-  "author": {
-    "name": "Manuel Araoz",
-    "email": "manuelaraoz@gmail.com"
-  },
+  "author": "Manuel Araoz <manuelaraoz@gmail.com>",
   "scripts": {
     "lint": "gulp lint",
     "test": "gulp test",
@@ -25735,25 +25735,13 @@ module.exports={
     "sha512": "=0.0.1"
   },
   "devDependencies": {
-    "bitcore-build": "git+https://github.com/maraoz/bitcore-build#e848a8ba612366ad98abd20e229570dc061a4288",
+    "bitcore-build": "maraoz/bitcore-build#e848a8ba612366ad98abd20e229570dc061a4288",
     "brfs": "^1.2.0",
     "chai": "^1.10.0",
     "gulp": "^3.8.10",
     "sinon": "^1.13.0"
   },
-  "license": "MIT",
-  "gitHead": "0402a54d992993dbcb409688671d40a77c96d793",
-  "readme": "# decentraland-core\nBlockchain-based decentralized land implementation in JavaScript\n\nThis is a clone of bitcore's codebase, with the following changes:\n- Removed Script-related classes\n- Removed URI, Unit, and other bitcoin-only utils\n- Changed PublicKey to support only compressed keys\n- Removed Transaction Input, Output and related classes\n- Changed Transaction signing logic (using simpler scheme)\n- Transaction now has owner, previous transaction, color, position, version, signature\n- Miner class added \n- Blockchain class added\n\n",
-  "readmeFilename": "README.md",
-  "bugs": {
-    "url": "https://github.com/maraoz/decentraland-core/issues"
-  },
-  "homepage": "https://github.com/maraoz/decentraland-core",
-  "_id": "decentraland-core@0.0.2",
-  "_shasum": "2a1a43f47b059a02bc786357beec23b8d53da70e",
-  "_from": "git://github.com/eordano/decentraland-core.git",
-  "_resolved": "git://github.com/eordano/decentraland-core.git#0402a54d992993dbcb409688671d40a77c96d793",
-  "_fromGithub": true
+  "license": "MIT"
 }
 
 },{}],66:[function(require,module,exports){
@@ -31725,7 +31713,7 @@ module.exports={
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:indutny/elliptic"
+    "url": "git+ssh://git@github.com/indutny/elliptic.git"
   },
   "keywords": [
     "EC",

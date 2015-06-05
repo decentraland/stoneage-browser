@@ -5,8 +5,6 @@ module.exports = {
 
   networking: {
     id: null,
-    //id: 'seed-livenet-maraoz',
-    //id: 'seed-livenet-eordano',
     server: {
       //debug: 3,
       //host: 'localhost',

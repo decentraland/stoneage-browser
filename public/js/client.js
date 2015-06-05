@@ -18,6 +18,7 @@ var $ = core.util.preconditions;
 var LocalStorageTxStore = require('./store/transaction');
 var LocalStorageBlockStore = require('./store/block');
 
+
 var RETARGET_PERIOD = 50;
 var DESIRED_BLOCK_TIME = 1 / 10 * 60; // 2 minutes
 var DESIRED_RETARGET_TIME = DESIRED_BLOCK_TIME * RETARGET_PERIOD;
@@ -26,13 +27,49 @@ var MAX_BLOCKS_IN_INV = 50;
 
 function Client() {
   events.EventEmitter.call(this);
-  var self = this;
 
+  this.txPool = [];
+  this.focusPixel = null;
+  this.draw = false;
+  this.drawColor = 0xFF0000;
+  this.inventory = {};
   this.blockchain = new Blockchain();
   this.blockchain.blockStore = LocalStorageBlockStore;
   this.blockchain.txStore = LocalStorageTxStore;
-  this.loadBlockchain();
+  this._setupBlockchain();
 
+  this._setupWallet();
+
+  //allows setting peer id from url
+  config.networking.id = window.location.hash.substring(1) || config.networking.id;
+  this._setupNetworking();
+  this._setupMiner();
+}
+util.inherits(Client, events.EventEmitter);
+
+
+Client.prototype._setupMiner = function() {
+  this.miner = new Miner({
+    client: this,
+    publicKey: this.keys[0],
+    target: {
+      x: 0,
+      y: 0
+    },
+    color: 0xff0000,
+    txPool: this.txPool,
+    callback: this.receiveBlock.bind(this),
+    enableMining: false,
+    bits: this.bits,
+  });
+  this.retarget();
+  this.miner.on('block', this.receiveBlock.bind(this));
+
+  this.miner.startMining();
+};
+
+Client.prototype._setupWallet = function() {
+  var self = this;
   var wallet = localStorage.getItem('privateKeys');
   this.wallet = {};
   if (!wallet) {
@@ -54,38 +91,9 @@ function Client() {
     });
   }
 
-  //allows setting peer id from url
-  config.networking.id = window.location.hash.substring(1) || config.networking.id;
-  this._setupNetworking();
+};
 
-  this.txPool = [];
-  this.focusPixel = null;
-  this.draw = false;
-  this.drawColor = 0xFF0000;
-
-  this.miner = new Miner({
-    client: this,
-    publicKey: this.keys[0],
-    target: {
-      x: 0,
-      y: 0
-    },
-    color: 0xff0000,
-    txPool: this.txPool,
-    callback: this.receiveBlock.bind(this),
-    enableMining: false,
-    bits: this.bits,
-  });
-  this.retarget();
-  this.miner.on('block', this.receiveBlock.bind(this));
-
-  this.miner.startMining();
-
-  this.inventory = {};
-}
-util.inherits(Client, events.EventEmitter);
-
-Client.prototype.loadBlockchain = function() {
+Client.prototype._setupBlockchain = function() {
   var self = this;
   var tip = localStorage.getItem('tip');
 
@@ -95,8 +103,11 @@ Client.prototype.loadBlockchain = function() {
   }
 
   var blocks = [];
-  var block;
-  while (block = this.blockchain.getBlock(tip)) {
+  while (true) {
+    var block = this.blockchain.getBlock(tip);
+    if (!block) {
+      return;
+    }
     blocks.push(block);
     tip = block.prevHash;
   }
@@ -108,7 +119,6 @@ Client.prototype.loadBlockchain = function() {
 };
 
 Client.prototype._setupNetworking = function() {
-
   var networking = new Networking(config.networking);
   var self = this;
   var after = {};
@@ -334,7 +344,10 @@ Client.prototype.retarget = function(restart) {
 
   var target = this.miner.target;
   if (restart) {
-    target = {x:0, y:0};
+    target = {
+      x: 0,
+      y: 0
+    };
   }
   var lookup = [target];
   var seen = {};

@@ -5,12 +5,11 @@ var $ = core.util.preconditions;
 var _ = core.deps._;
 var events = require('events');
 var Block = core.Block;
-var BlockHeader = core.BlockHeader;
 
 var util = require('util');
 var inherits = util.inherits;
 
-var STARTING_BITS = BlockHeader.Constants.DEFAULT_BITS; // 0x1fefffff;
+var STARTING_BITS = 0x1fefffff;
 
 function Mining(opts) {
   $.checkArgument(_.isObject(opts));
