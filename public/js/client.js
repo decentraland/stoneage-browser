@@ -33,15 +33,11 @@ function Client() {
   this.draw = false;
   this.drawColor = 0xFF0000;
   this.inventory = {};
-  this.blockchain = new Blockchain();
-  this.blockchain.blockStore = LocalStorageBlockStore;
-  this.blockchain.txStore = LocalStorageTxStore;
-  this._setupBlockchain();
-
-  this._setupWallet();
-
   //allows setting peer id from url
   config.networking.id = window.location.hash.substring(1) || config.networking.id;
+
+  this._setupBlockchain();
+  this._setupWallet();
   this._setupNetworking();
   this._setupMiner();
 }
@@ -49,6 +45,7 @@ util.inherits(Client, events.EventEmitter);
 
 
 Client.prototype._setupMiner = function() {
+  console.log('Setting up miner');
   this.miner = new Miner({
     client: this,
     publicKey: this.keys[0],
@@ -69,6 +66,7 @@ Client.prototype._setupMiner = function() {
 };
 
 Client.prototype._setupWallet = function() {
+  console.log('Setting up wallet.');
   var self = this;
   var wallet = localStorage.getItem('privateKeys');
   this.wallet = {};
@@ -94,7 +92,11 @@ Client.prototype._setupWallet = function() {
 };
 
 Client.prototype._setupBlockchain = function() {
+  console.log('Setting up blockchain.');
   var self = this;
+  this.blockchain = new Blockchain();
+  this.blockchain.blockStore = LocalStorageBlockStore;
+  this.blockchain.txStore = LocalStorageTxStore;
   var tip = localStorage.getItem('tip');
 
   if (!tip) {
@@ -106,19 +108,22 @@ Client.prototype._setupBlockchain = function() {
   while (true) {
     var block = this.blockchain.getBlock(tip);
     if (!block) {
-      return;
+      break;
     }
     blocks.push(block);
     tip = block.prevHash;
   }
   blocks.reverse();
   blocks.map(function(block) {
+    //console.log(block.id, block.height, block.timestamp);
     this.blockchain.proposeNewBlock(block);
     self.bits = block.bits;
   }, this);
 };
 
 Client.prototype._setupNetworking = function() {
+  console.log('Setting up networking.');
+
   var networking = new Networking(config.networking);
   var self = this;
   var after = {};

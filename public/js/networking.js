@@ -115,7 +115,7 @@ Networking.prototype._setupServerConnection = function() {
 };
 
 Networking.prototype.start = function() {
-  console.log('Starting networking. My own id:', this.server.id);
+  console.log('My own id:', this.server.id);
   this.connectToSeeds();
   this.seedInterval = setInterval(this.connectToSeeds.bind(this), SEED_CONNECT_INTERVAL);
 };
@@ -202,7 +202,7 @@ Networking.prototype.closeConnection = function(peerID) {
 
 Networking.prototype.openConnection = function(peerID) {
   if (!this.peers[peerID]) {
-    console.log('attempting to connect to', peerID);
+    console.log('Attempting to connect to', peerID);
     var dataConnection = this.server.connect(peerID, {
       label: peerID,
       metadata: this.metadata,
