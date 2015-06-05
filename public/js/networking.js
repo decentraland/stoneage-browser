@@ -7,6 +7,8 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
 
+var SEED_CONNECT_INTERVAL = 25*1000;
+
 function Networking(opts) {
   $.checkArgument(_.isObject(opts));
 
@@ -21,6 +23,10 @@ function Networking(opts) {
 
 util.inherits(Networking, EventEmitter);
 
+
+Networking.prototype.isConnected = function() {
+  return this.server && this.server.disconnected === false;
+};
 
 Networking.prototype._setupServerConnection = function() {
 
@@ -48,8 +54,8 @@ Networking.prototype._setupServerConnection = function() {
 
   this.server.on('disconnected', function() {
     // Emitted when the peer is disconnected from the signalling server
-    console.log('disconnected from signaling server, attempting to reconnect');
-    self.server.reconnect();
+    //console.log('disconnected from signaling server, attempting to reconnect');
+    //self.server.reconnect();
   });
 
   this.server.on('error', function(err) {
@@ -58,7 +64,8 @@ Networking.prototype._setupServerConnection = function() {
       case 'peer-unavailable':
         // ERROR
         // The peer you're trying to connect to does not exist.
-        console.log('peer unavailable');
+        var peerID = err.message.substring(26);
+        self.emit('peer-unavailable', peerID);
         break;
       case 'browser-incompatible':
         // ERROR FATAL
@@ -108,17 +115,24 @@ Networking.prototype._setupServerConnection = function() {
 };
 
 Networking.prototype.start = function() {
-  var self = this;
+  console.log('Starting networking. My own id:', this.server.id);
+  this.connectToSeeds();
+  this.seedInterval = setInterval(this.connectToSeeds.bind(this), SEED_CONNECT_INTERVAL);
+};
 
-  console.log('my own id', self.server.id);
+Networking.prototype.stop = function() {
+  clearInterval(this.seedInterval);
+};
+
+Networking.prototype.connectToSeeds = function() {
+  var self = this;
+  console.log('Attempting connection to seeds');
   _.each(this.seeds, function(seed) {
     if (seed === self.server.id) {
       return;
     }
-    console.log('attempting to connect to', seed);
     self.openConnection(seed);
   });
-
 };
 
 Networking.prototype._setupPeerConnection = function(dataConnection) {
@@ -188,6 +202,7 @@ Networking.prototype.closeConnection = function(peerID) {
 
 Networking.prototype.openConnection = function(peerID) {
   if (!this.peers[peerID]) {
+    console.log('attempting to connect to', peerID);
     var dataConnection = this.server.connect(peerID, {
       label: peerID,
       metadata: this.metadata,

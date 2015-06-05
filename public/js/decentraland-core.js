@@ -25654,7 +25654,7 @@ module.exports.WordArray = X64WordArray
 },{"./word-array":63}],65:[function(require,module,exports){
 module.exports={
   "name": "decentraland-core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Blockchain-based decentralized land implementation in JavaScript",
   "main": "index.js",
   "author": "Manuel Araoz <manuelaraoz@gmail.com>",
