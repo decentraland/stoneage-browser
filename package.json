@@ -1,5 +1,5 @@
 {
-  "name": "decentraland",
+  "name": "decentraland-stonage",
   "version": "0.0.1-alpha1-SNAPSHOT",
   "description": "A Decentralized Virtual Reality",
   "main": "index.js",
@@ -10,6 +10,10 @@
     "Esteban Ordano <eordano@gmail.com>",
     "Manuel Araoz <manuelaraoz@gmail.com>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:decentraland/stoneage.git"
+  },
   "license": "MIT",
   "dependencies": {
     "bootstrap": "^3.3.4",
@@ -18,6 +22,7 @@
     "express": "^4.12.4",
     "express-jsxtransform": "^3.0.0",
     "express-ws": "^0.2.6",
+    "freeice": "^2.1.2",
     "jquery": "^2.1.4",
     "react": "^0.13.3",
     "react-bootstrap": "^0.22.6",
