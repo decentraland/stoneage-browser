@@ -41,6 +41,7 @@
         "it",
         "module",
         "require",
-        "Peer"
+        "Peer",
+        "jQuery"
     ]
 }

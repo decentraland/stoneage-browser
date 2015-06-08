@@ -23,7 +23,7 @@ var RETARGET_PERIOD = 50;
 var DESIRED_BLOCK_TIME = 1 / 10 * 60; // 2 minutes
 var DESIRED_RETARGET_TIME = DESIRED_BLOCK_TIME * RETARGET_PERIOD;
 var MAX_TIME_DELTA = 1 * (60 * 60); // 1 hour
-var MAX_BLOCKS_IN_INV = 50;
+var MAX_BLOCKS_IN_INV = 100;
 
 function Client() {
   events.EventEmitter.call(this);
@@ -276,19 +276,18 @@ Client.prototype.receiveBlock = function(block, peerID) {
   }
 
   if (result.confirmed.length) {
-
-    var amount = result.confirmed.length - result.unconfirmed.length;
     var mine = !!self.wallet[block.transactions[0].owner];
 
     if (mine) {
-      var message = 'You now own a new pixel at position ' + block.transactions[0].position.x + ', ' + block.transactions[0].position.y;
+      var message = 'You now own a new pixel at position ' +
+        block.transactions[0].position.x +
+        ', ' + block.transactions[0].position.y;
       jQuery.notify({
         message: message
       }, {
         showProgressbar: false
       });
     }
-
 
     // Remove old transactions
     result.confirmed.forEach(function(newBlock) {

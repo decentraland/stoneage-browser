@@ -9,8 +9,8 @@ module.exports = {
     id: null,
     server: {
       //debug: 3,
-      //host: 'localhost',
-      //port: 9000,
+      host: 'localhost',
+      port: 9000,
       key: 'igd9tuakix0w9udi',
       iceServers: iceServers,
 
