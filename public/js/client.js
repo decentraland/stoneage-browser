@@ -23,7 +23,7 @@ var RETARGET_PERIOD = 50;
 var DESIRED_BLOCK_TIME = 1 / 10 * 60; // 2 minutes
 var DESIRED_RETARGET_TIME = DESIRED_BLOCK_TIME * RETARGET_PERIOD;
 var MAX_TIME_DELTA = 1 * (60 * 60); // 1 hour
-var MAX_BLOCKS_IN_INV = 100;
+var MAX_BLOCKS_IN_INV = 50;
 
 function Client() {
   events.EventEmitter.call(this);
@@ -248,12 +248,14 @@ Client.prototype.receiveBlock = function(block, peerID) {
     return;
   }
 
+  /*
   var now = new Date().getTime() / 1000;
   var delta = Math.abs(block.timestamp - now);
   if (delta > MAX_TIME_DELTA) {
     console.log('rejected block due to timestamp delta', delta);
     return;
   }
+  */
 
   try {
     result = this.blockchain.proposeNewBlock(block);
@@ -437,7 +439,8 @@ Client.prototype.getState = function() {
       }
     ),
     txPool: this.txPool,
-    blocks: this.blockchain.height
+    blocks: this.blockchain.height,
+    height: this.blockchain.getCurrentHeight(),
   };
 };
 

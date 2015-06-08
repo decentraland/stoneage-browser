@@ -155,10 +155,10 @@ var Sidebar = React.createClass({
           </div>
           <div className="row">
             <div className="col-md-6 leftcol">
-              Pending transactions
+              Total pixel count
             </div>
             <div className="col-md-6">
-              {pendingCount}
+              {this.props.client.height}
             </div>
           </div>
         </div>
