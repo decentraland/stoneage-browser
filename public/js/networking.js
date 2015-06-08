@@ -7,7 +7,8 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
 
-var SEED_CONNECT_INTERVAL = 25*1000;
+var SEED_CONNECT_INTERVAL = 25 * 1000;
+var BASE_RECONNECT_INTERVAL = 1000;
 
 function Networking(opts) {
   $.checkArgument(_.isObject(opts));
@@ -17,6 +18,7 @@ function Networking(opts) {
   this.id = opts.id;
   this.server = new Peer(opts.id, opts.server);
   this.peers = {};
+  this.reconnectInterval = BASE_RECONNECT_INTERVAL;
 
   this._setupServerConnection();
 }
@@ -35,6 +37,8 @@ Networking.prototype._setupServerConnection = function() {
   this.server.on('open', function(id) {
     // called when connection to server is ready
     console.log('Server connection established as', id);
+    self.reconnectInterval = BASE_RECONNECT_INTERVAL;
+    self.startReconnect();
   });
 
   this.server.on('connection', function(dataConnection) {
@@ -55,7 +59,10 @@ Networking.prototype._setupServerConnection = function() {
   this.server.on('disconnected', function() {
     // Emitted when the peer is disconnected from the signalling server
     //console.log('disconnected from signaling server, attempting to reconnect');
-    //self.server.reconnect();
+    self.stop();
+    setTimeout(self.server.reconnect.bind(self.server), self.reconnectInterval);
+    self.emit('reconnecting', self.reconnectInterval);
+    self.reconnectInterval *= 2;
   });
 
   this.server.on('error', function(err) {
@@ -66,6 +73,19 @@ Networking.prototype._setupServerConnection = function() {
         // The peer you're trying to connect to does not exist.
         var peerID = err.message.substring(26);
         self.emit('peer-unavailable', peerID);
+        break;
+      case 'unavailable-id':
+        // ERROR SOMETIMES FATAL
+        // The ID passed into the Peer constructor is already taken.
+        // This error is not fatal if your peer has open peer-to-peer connections.
+        // This can happen if you attempt to reconnect a peer that has been
+        // disconnected from the server, but its old ID has now been taken.
+        self.emit('unavailable-id');
+        break;
+      case 'network':
+        // ERROR
+        // Lost or cannot establish a connection to the signalling server.
+        self.emit('unreachable');
         break;
       case 'browser-incompatible':
         // ERROR FATAL
@@ -82,9 +102,6 @@ Networking.prototype._setupServerConnection = function() {
         // ERROR FATAL
         // The API key passed into the Peer constructor contains illegal
         // characters or is not in the system (cloud server only).
-      case 'network':
-        // ERROR
-        // Lost or cannot establish a connection to the signalling server.
       case 'ssl-unavailable':
         // ERROR FATAL
         // PeerJS is being used securely, but the cloud server does
@@ -98,12 +115,6 @@ Networking.prototype._setupServerConnection = function() {
       case 'socket-closed':
         // ERROR FATAL
         // The underlying socket closed unexpectedly.
-      case 'unavailable-id':
-        // ERROR SOMETIMES FATAL
-        // The ID passed into the Peer constructor is already taken.
-        // This error is not fatal if your peer has open peer-to-peer connections.
-        // This can happen if you attempt to reconnect a peer that has been
-        // disconnected from the server, but its old ID has now been taken.
       case 'webrtc':
         // ERROR
         // Native WebRTC errors.
@@ -117,6 +128,10 @@ Networking.prototype._setupServerConnection = function() {
 Networking.prototype.start = function() {
   console.log('My own id:', this.server.id);
   this.connectToSeeds();
+};
+
+
+Networking.prototype.startReconnect = function() {
   this.seedInterval = setInterval(this.connectToSeeds.bind(this), SEED_CONNECT_INTERVAL);
 };
 
