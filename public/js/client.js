@@ -146,7 +146,15 @@ Client.prototype._setupNetworking = function() {
         delay: delta - 500,
         type: 'danger'
       });
+  });
 
+  networking.on('reconnected', function() {
+    if (self._reconnectNotif) {
+      self._reconnectNotif.close();
+    }
+    self.notify('Connection to signaling server restored!', {
+      type: 'success'
+    });
   });
 
   networking.on('connection', function(peerID) {

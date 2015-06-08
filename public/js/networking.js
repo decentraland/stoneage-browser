@@ -37,6 +37,9 @@ Networking.prototype._setupServerConnection = function() {
   this.server.on('open', function(id) {
     // called when connection to server is ready
     console.log('Server connection established as', id);
+    if (self.reconnectInterval !== BASE_RECONNECT_INTERVAL) {
+      self.emit('reconnected');
+    }
     self.reconnectInterval = BASE_RECONNECT_INTERVAL;
     self.startReconnect();
   });
