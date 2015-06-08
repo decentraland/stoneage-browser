@@ -22,8 +22,8 @@ var LocalStorageBlockStore = require('./store/block');
 var RETARGET_PERIOD = 50;
 var DESIRED_BLOCK_TIME = 1 / 10 * 60; // 2 minutes
 var DESIRED_RETARGET_TIME = DESIRED_BLOCK_TIME * RETARGET_PERIOD;
-var MAX_TIME_DELTA = 1 * (60 * 60); // 1 hour
-var MAX_BLOCKS_IN_INV = 50;
+var MAX_TIME_DELTA = 1 * (60); // 1 hour
+var MAX_BLOCKS_IN_INV = 500;
 
 function Client() {
   events.EventEmitter.call(this);
@@ -172,12 +172,18 @@ Client.prototype._setupNetworking = function() {
 
   networking.on('getdata', function(peerID, inv) {
     //console.log('getdata from peer', peerID, inv);
+    if (inv.length > MAX_BLOCKS_IN_INV) {
+      console.log('getdata requested for more than', MAX_BLOCKS_IN_INV, 'blocks');
+      return;
+    }
+    var blocks = [];
     inv.forEach(function(blockhash) {
       var block = self.blockchain.getBlock(blockhash);
       if (block) {
-        networking.send(peerID, 'block', block.toString());
+        blocks.push(block.toString());
       }
     });
+    networking.send(peerID, 'blocks', JSON.stringify(blocks));
   });
 
   networking.on('getblocks', function(peerID, locator) {
@@ -201,11 +207,13 @@ Client.prototype._setupNetworking = function() {
     networking.send(peerID, 'inv', blocks);
   });
 
-  networking.on('block', function(peerID, block) {
-
+  var consumeBlock = function(peerID, blocks) {
+    var block = blocks.shift();
+    if (!block) {
+      return;
+    }
     var unserialized = Block.fromBuffer(block);
     var hash = unserialized.hash;
-
     //console.log('block from peer', peerID, hash);
     delete self.inventory[hash];
 
@@ -219,6 +227,7 @@ Client.prototype._setupNetworking = function() {
 
       // Process queued blocks
       while (after[hash]) {
+        console.log('after', hash, '=', after[hash]);
         unserialized = after[unserialized.hash];
         self.receiveBlock(unserialized, peerID);
         delete after[hash];
@@ -230,7 +239,11 @@ Client.prototype._setupNetworking = function() {
       console.log('requesting blocks with locator of size', locator.length);
       networking.send(peerID, 'getblocks', locator);
     }
-
+    setTimeout(consumeBlock.bind(null, peerID, blocks), 1);
+  };
+  networking.on('blocks', function(peerID, blocks) {
+    blocks = JSON.parse(blocks);
+    consumeBlock(peerID, blocks);
   });
 
   networking.start();
@@ -241,14 +254,18 @@ Client.prototype.receiveBlock = function(block, peerID) {
   var result;
   var self = this;
 
+  /*
+  TODO: fix and add again
   var hasPrev = this.blockchain.hasData(block.prevHash);
   if (!hasPrev) {
     console.log('dont have data on prevhash for received block');
     this.networking.send(peerID, 'getblocks', this.blockchain.getBlockLocator());
     return;
   }
+  */
 
   /*
+  TODO: add timestamp checks again
   var now = new Date().getTime() / 1000;
   var delta = Math.abs(block.timestamp - now);
   if (delta > MAX_TIME_DELTA) {

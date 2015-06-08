@@ -221,6 +221,7 @@ Networking.prototype.send = function(peerID, type, message) {
   $.checkArgument(_.isString(type), 'type is a required string');
   $.checkArgument(!_.isUndefined(message), 'message is required');
 
+  //console.log('sending', type, 'to', peerID);
   this.peers[peerID].send({
     type: type,
     payload: message
