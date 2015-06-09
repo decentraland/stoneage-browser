@@ -43,6 +43,17 @@ function Client() {
 }
 util.inherits(Client, events.EventEmitter);
 
+var NOTIFY_DEFAULTS = {
+  showProgressbar: false,
+  delay: 5000,
+};
+Client.prototype.notify = function(message, opts) {
+  opts = opts || NOTIFY_DEFAULTS;
+  var notification = jQuery.notify({
+    message: message
+  }, opts);
+  return notification;
+};
 
 Client.prototype._setupMiner = function() {
   console.log('Setting up miner');
@@ -115,7 +126,7 @@ Client.prototype._setupBlockchain = function() {
   }
   blocks.reverse();
   blocks.map(function(block) {
-    //console.log(block.id, block.height, block.timestamp);
+    console.log(block.id, block.height, block.timestamp);
     this.blockchain.proposeNewBlock(block);
     self.bits = block.bits;
   }, this);
@@ -127,6 +138,33 @@ Client.prototype._setupNetworking = function() {
   var networking = new Networking(config.networking);
   var self = this;
   var after = {};
+
+  networking.on('unavailable-id', function() {
+    self._unavailableID = self.notify('Network id ' + self.networking.id + ' is unavailable. Please try another one.', {
+      type: 'danger',
+      delay: 120000
+    });
+  });
+  networking.on('reconnecting', function(delta) {
+    if (self._unavailableID) {
+      return;
+    }
+    var seconds = delta / 1000;
+    self._reconnectNotif = self.notify('Connection to signaling server lost. Attempting to reconnect in ' +
+      seconds + ' second' + (seconds === 1 ? '' : 's'), {
+        delay: delta - 500,
+        type: 'danger'
+      });
+  });
+
+  networking.on('reconnected', function() {
+    if (self._reconnectNotif) {
+      self._reconnectNotif.close();
+    }
+    self.notify('Connection to signaling server restored!', {
+      type: 'success'
+    });
+  });
 
   networking.on('connection', function(peerID) {
     console.log('new connection', peerID);
@@ -301,11 +339,8 @@ Client.prototype.receiveBlock = function(block, peerID) {
       var message = 'You now own a new pixel at position ' +
         block.transactions[0].position.x +
         ', ' + block.transactions[0].position.y;
-      jQuery.notify({
-        message: message
-      }, {
-        showProgressbar: false
-      });
+
+      self.notify(message);
     }
 
     // Remove old transactions
@@ -322,7 +357,6 @@ Client.prototype.receiveBlock = function(block, peerID) {
     // Broadcast inv
     this.networking.broadcast('inv', [block.hash]);
 
-    // Update UI
     this.emit('update');
 
     // Retarget and continue mining
