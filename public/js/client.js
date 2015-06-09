@@ -139,7 +139,16 @@ Client.prototype._setupNetworking = function() {
   var self = this;
   var after = {};
 
+  networking.on('unavailable-id', function() {
+    self._unavailableID = self.notify('Network id ' + self.networking.id + ' is unavailable. Please try another one.', {
+      type: 'danger',
+      delay: 120000
+    });
+  });
   networking.on('reconnecting', function(delta) {
+    if (self._unavailableID) {
+      return;
+    }
     var seconds = delta / 1000;
     self._reconnectNotif = self.notify('Connection to signaling server lost. Attempting to reconnect in ' +
       seconds + ' second' + (seconds === 1 ? '' : 's'), {
